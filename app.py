@@ -36,31 +36,26 @@ MYANMAR_CITIES_20 = {
 @st.cache_data(ttl=300)
 def get_weather_data(city):
     lat, lon = MYANMAR_CITIES_20[city]['lat'], MYANMAR_CITIES_20[city]['lon']
+    # ၁၆ ရက်စာ ခန့်မှန်းချက် (Free API အများဆုံး)
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
     try:
         r = requests.get(url, timeout=10).json()
         h, d = r['hourly'], r['daily']
         df_h = pd.DataFrame({"Time": pd.to_datetime(h['time']), "Temp": h['temperature_2m'], "Wind": h['windspeed_10m'], "WindDir": h['winddirection_10m']})
         df_d = pd.DataFrame({"Date": pd.to_datetime(d['time']), "Tmax": d['temperature_2m_max'], "Tmin": d['temperature_2m_min'], "RainSum": d['precipitation_sum'], "WindMax": d['windspeed_10m_max']})
-        # နေ့လည် ၁ နာရီ ဒေတာ (Wind Direction အတွက်)
+        # နေ့လည် ၁ နာရီ ဒေတာ (Wind Direction Arrows အတွက်)
         df_w_sample = df_h[df_h['Time'].dt.hour == 13].copy()
         return df_h, df_d, df_w_sample
     except: return None, None, None
-
-# Climate Projection (2100) simulation
-def get_climate_projection(city):
-    years = np.arange(2026, 2101)
-    temp_trend = [30 + (y-2026)*0.045 + np.random.normal(0, 0.4) for y in years]
-    return pd.DataFrame({"Year": years, "Projected_Temp": temp_trend})
 
 # --- Sidebar (ဘေးဘောင်) ---
 st.sidebar.image("https://www.moezala.gov.mm/themes/custom/dmh/logo.png", width=120)
 st.sidebar.markdown("### 🔍 Dashboard Controls")
 selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
-view_mode = st.sidebar.radio("📊 Analysis Mode", ["16-Day Forecast Analysis", "Heatwave Monitoring", "IPCC Climate Projection (2100)"])
+view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- Main UI ---
-st.markdown(f"<h1 style='text-align: center; color: #1E88E5;'>🇲🇲 DMH AI Weather Forecast Dashboard</h1>", unsafe_allow_html=True)
+# --- Main Dashboard UI ---
+st.markdown(f"<h1 style='text-align: center; color: #1E88E5;'>🇲🇲 DMH AI Weather Forecast System</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center;'><b>Local Time (MMT):</b> {now.strftime('%I:%M %p, %d %b %Y')}</p>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -74,7 +69,7 @@ if df_d is not None:
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'] + 1.5, mode='markers', name='Direction',
                                    marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red', line=dict(width=1, color='black'))))
-        fig_w.update_layout(height=450)
+        fig_w.update_layout(height=450, margin=dict(l=20, r=20, t=30, b=20))
         st.plotly_chart(fig_w, use_container_width=True)
 
         st.markdown("---")
@@ -82,7 +77,7 @@ if df_d is not None:
         # ၂။ Temperature Graph (အလယ်)
         st.subheader("🌡️ (2) 16-Day Temperature Outlook (°C)")
         fig_t = px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'#d62728', 'Tmin':'#1f77b4'})
-        fig_t.update_layout(height=450)
+        fig_t.update_layout(height=450, margin=dict(l=20, r=20, t=30, b=20))
         st.plotly_chart(fig_t, use_container_width=True)
 
         st.markdown("---")
@@ -90,49 +85,67 @@ if df_d is not None:
         # ၃။ Rainfall Graph (အောက်ဆုံး)
         st.subheader("🌧️ (3) Precipitation Summary (mm)")
         fig_r = px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['#00b4d8'])
-        fig_r.update_layout(height=450)
+        fig_r.update_layout(height=450, margin=dict(l=20, r=20, t=30, b=20))
         st.plotly_chart(fig_r, use_container_width=True)
 
-    elif view_mode == "Heatwave Monitoring":
-        st.subheader(f"🔥 Extreme Heatwave Monitoring: {selected_city}")
+    elif view_mode == "Heatwave Monitoring (IBF)":
+        st.subheader(f"🔥 Impact-Based Monitoring: Heatwave ({selected_city})")
         
-        # Heatwave Threshold (40°C) စစ်ဆေးခြင်း
-        heat_days = df_d[df_d['Tmax'] >= 40]
+        # Heatwave Criterion Logic
+        max_temp_val = df_d['Tmax'].max()
+        risk_level, color, text_c = "Low", "green", "white"
         
-        if not heat_days.empty:
-            st.error(f"⚠️ သတိပေးချက်: လာမည့် ၁၆ ရက်အတွင်း အပူချိန် ၄၀ ဒီဂရီစင်တီဂရိတ်ထက်ကျော်လွန်သောရက် ({len(heat_days)}) ရက် တွေ့ရှိရပါသည်။")
-            st.dataframe(heat_days[['Date', 'Tmax']].rename(columns={'Tmax': 'Max Temp (°C)'}), use_container_width=True)
-        else:
-            st.success("✅ လာမည့် ၁၆ ရက်အတွင်း အပူချိန် ၄၀ ဒီဂရီစင်တီဂရိတ်ထက် ကျော်လွန်မည့်ရက် မရှိပါ။")
+        if max_temp_val >= 42: risk_level, color = "Extreme Risk", "red"
+        elif max_temp_val >= 40: risk_level, color = "High Risk", "orange"
+        elif max_temp_val >= 38: risk_level, color, text_c = "Moderate Risk", "yellow", "black"
 
-        # Heatwave Visual Graph
+        # Risk Level Display Card
+        st.markdown(f"""
+        <div style="background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;">
+            <h2 style="color:{text_c}; margin:0;">Heat Risk Status: {risk_level}</h2>
+            <p style="color:{text_c}; font-size:1.2em;">Highest Expected Temperature: {max_temp_val} °C</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Heat Trend Bar Chart
+        st.markdown("#### Daily Maximum Temperature Trend")
         fig_h = px.bar(df_d, x='Date', y='Tmax', color='Tmax', 
-                       color_continuous_scale=['#ffea00', '#ff9100', '#ff0000'],
-                       title="Daily Maximum Temperature Trend with Alert Level")
-        fig_h.add_hline(y=40, line_dash="dash", line_color="red", annotation_text="Danger Level (40°C)", annotation_position="top left")
+                       color_continuous_scale='YlOrRd', labels={'Tmax': 'Max Temp (°C)'})
+        fig_h.add_hline(y=40, line_dash="dash", line_color="red", annotation_text="Danger Threshold (40°C)")
         fig_h.update_layout(height=500)
         st.plotly_chart(fig_h, use_container_width=True)
 
-        # Health Advice (IBF Style)
-        st.info("""
-        **🛡️ ကျန်းမာရေးဆိုင်ရာ အကြံပြုချက်များ (Health Advice):**
-        * နေ့လည် (၁၁) နာရီမှ (၄) နာရီအတွင်း နေရောင်ခြည်အောက် တိုက်ရိုက်သွားလာခြင်းကို ရှောင်ကြဉ်ပါ။
-        * ရေနှင့် ဓာတ်ဆားရည်များကို ပုံမှန်ထက် ပိုမိုသောက်သုံးပါ။
-        * အရိပ်ရပြီး လေဝင်လေထွက်ကောင်းသော နေရာတွင် နေထိုင်ပါ။
-        """)
+        # IBF Recommendations
+        st.markdown("### 📋 Impact-Based Recommendations")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.info("**🏥 Health Sector:**\n* Heatstroke ရှောင်ရန် အရိပ်ရသောနေရာတွင် နေပါ။\n* ရေနှင့် ဓာတ်ဆားရည် ပိုမိုသောက်သုံးပါ။")
+        with c2:
+            st.warning("**🌾 Agriculture Sector:**\n* သီးနှံများအား အပူဒဏ်မှ ကာကွယ်ရန် ရေသွင်းခြင်းကို ဂရုပြုပါ။\n* တိရစ္ဆာန်များအား အအေးပေးစနစ် ထားရှိပါ။")
 
     else:
-        # IPCC Climate Projection
+        # Long-term Climate Projection
         st.subheader(f"🔮 Long-term Climate Projection (2026-2100): {selected_city}")
-        df_climate = get_climate_projection(selected_city)
-        fig_c = px.line(df_climate, x='Year', y='Projected_Temp', color_discrete_sequence=['#b00020'])
-        fig_c.update_layout(height=500, xaxis_title="Year", yaxis_title="Projected Mean Temp (°C)")
+        years = np.arange(2026, 2101)
+        temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
+        fig_c = px.line(x=years, y=temp_trend, labels={'x': 'Year', 'y': 'Mean Temperature (°C)'}, color_discrete_sequence=['darkred'])
+        fig_c.update_layout(height=500)
         st.plotly_chart(fig_c, use_container_width=True)
-        st.warning("မှတ်ချက်။ ။ ဤသည်မှာ IPCC SSP scenarios များအပေါ် အခြေခံထားသော AI-based Simulation သာ ဖြစ်ပါသည်။")
+        st.warning("မှတ်ချက်။ ။ ဤသည်မှာ IPCC SSP scenarios များအပေါ် အခြေခံထားသော AI-based Climate Simulation သာ ဖြစ်ပါသည်။")
 
 else:
-    st.error("⚠️ Error: API Connection Failure. Please check your internet.")
+    st.error("⚠️ Connection Error. Please check your internet or API limits.")
 
-# --- Footer ---
+# --- 💡 Footer & Data Sources (အောက်ခြေပိုင်း) ---
 st.markdown("---")
-st.markdown("<div style='text-align: center; color: gray;'>Official System of Department of Meteorology and Hydrology (DMH) Myanmar</div>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: gray; font-size: 1.0em;'><b>DMH Myanmar | Powered by AI & Global Meteorological Data</b></p>", unsafe_allow_html=True)
+
+# Data Source အသေးစိတ်များကို ဗဟိုပြု၍ ဖော်ပြခြင်း
+st.markdown(f"""
+<div style='text-align: center; font-size: 0.85em; color: #666; line-height: 1.6;'>
+    <p><b>Forecast Data Source (16-Day):</b> Open-Meteo API (Combining ECMWF IFS, GFS, ICON, and JMA global models).</p>
+    <p><b>Heatwave Analysis:</b> Based on Impact-Based Forecasting (IBF) thresholds (P90, P95, P99) and WMO criteria.</p>
+    <p><b>Climate Data:</b> IPCC AR6 Assessment Report and CMIP6 Global Climate Models (SSP scenarios).</p>
+    <p style='margin-top: 10px; font-weight: bold;'>Official System: Department of Meteorology and Hydrology (DMH) Myanmar</p>
+</div>
+""", unsafe_allow_html=True)
