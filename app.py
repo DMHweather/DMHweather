@@ -132,7 +132,7 @@ st.markdown(
     """
     <div style='text-align: center; color: #555;'>
         <p><b>Official Dashboard of Department of Meteorology and Hydrology (DMH) Myanmar</b></p>
-        <p style='font-size: 0.85em;'>Supported by AI-based Meteorological Analysis | Monitoring Tomorrow, Protecting Today</p>
+        <p style='font-size: 0.85em;'>Supported by AI-based Meteorological Analysis | Monitoring by DMH</p>
     </div>
     """, unsafe_allow_html=True
 )
