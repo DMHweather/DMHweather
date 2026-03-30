@@ -13,7 +13,7 @@ mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
 
 # လူကြီးမင်း တင်ပေးထားသော logo.png ကို အသုံးပြုခြင်း
-logo_path = "logo.png"
+logo_path = "🌤️"
 
 # --- ၂။ Page Configuration ---
 st.set_page_config(
