@@ -7,12 +7,10 @@ import requests
 from datetime import datetime
 import pytz
 
-# --- ၁။ အချိန်ဇုန်နှင့် Logo/Flag URLs ---
+# --- ၁။ အချိန်ဇုန်နှင့် Logo ---
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
 dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
-# မြန်မာနိုင်ငံအလံကို ပုံရိပ်အနေဖြင့် အသုံးပြုခြင်း (ကွန်ပျူတာတွင်ပါ ပေါ်စေရန်)
-mm_flag_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Flag_of_Myanmar.svg/256px-Flag_of_Myanmar.svg.png"
 
 # --- ၂။ Page Configuration ---
 st.set_page_config(
@@ -53,17 +51,14 @@ st.sidebar.markdown("### 🔍 Monitoring Controls")
 selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
 view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- 💡 Main UI (Header with Image Flag) ---
-# HTML/CSS သုံးပြီး အလံပုံကို စာသားဘေးတွင် ကပ်ထည့်ခြင်း
+# --- Main UI Header ---
 st.markdown(f"""
     <div style='text-align: center;'>
-        <h1>
-            <img src='{mm_flag_url}' width='45' style='vertical-align: middle; margin-right: 10px;'>
-            DMH AI Weather Forecast System
+        <h1 style='font-family: "Segoe UI Emoji", sans-serif;'>
+            🇲🇲 DMH AI Weather Forecast System
         </h1>
     </div>
 """, unsafe_allow_html=True)
-
 st.markdown(f"<p style='text-align: center;'><b>Local Time (MMT):</b> {now.strftime('%I:%M %p, %d %b %Y')}</p>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -71,16 +66,19 @@ df_h, df_d, df_w = get_weather_data(selected_city)
 
 if df_d is not None:
     if view_mode == "16-Day Forecast Analysis":
-        st.subheader("💨 (1) Wind Speed (mph) & Directional Arrows")
+        # ၁။ Wind Speed (City Name Added)
+        st.subheader(f"💨 (1) Wind Speed (mph) & Direction - {selected_city}")
         fig_w = go.Figure()
-        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', line=dict(color='teal', width=3)))
+        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
         st.plotly_chart(fig_w, use_container_width=True)
 
-        st.subheader("🌡️ (2) 16-Day Temperature Outlook (°C)")
+        # ၂။ Temp Outlook (City Name Added)
+        st.subheader(f"🌡️ (2) 16-Day Temperature Outlook (°C) - {selected_city}")
         st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
 
-        st.subheader("🌧️ (3) Precipitation Summary (mm)")
+        # ၃။ Rain Summary (City Name Added)
+        st.subheader(f"🌧️ (3) Precipitation Summary (mm) - {selected_city}")
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['#00b4d8']), use_container_width=True)
 
     elif view_mode == "Heatwave Monitoring (IBF)":
@@ -94,15 +92,14 @@ if df_d is not None:
         st.markdown(f"<div style='background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;'><h2 style='color:{text_c};'>Heat Risk Status: {risk_level}</h2><p style='color:{text_c};'>{max_t} °C</p></div>", unsafe_allow_html=True)
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
 
-        st.markdown("### 🏥 Health Sector Impact & Recommendations")
-        st.error("**⚠️ Possible Impacts:** Heatstroke (အပူလျှပ်ခြင်း) အန္တရာယ်ရှိနိုင်သဖြင့် ဂရုပြုပါ။")
-        st.success("**🛡️ Mitigation Actions:** နေပူထဲသွားလာခြင်း ရှောင်ရန်နှင့် ရေများများသောက်ရန်။")
-
     else:
-        st.subheader("🔮 IPCC Climate Projection (2100)")
+        # Climate Projection (City Name Added)
+        st.subheader(f"🔮 IPCC Climate Projection (2100) - {selected_city}")
         years = np.arange(2026, 2101)
         temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
-        st.plotly_chart(px.line(x=years, y=temp_trend, labels={'x': 'Year', 'y': 'Mean Temp'}, color_discrete_sequence=['darkred']), use_container_width=True)
+        fig_c = px.line(x=years, y=temp_trend, labels={'x': 'Year', 'y': 'Mean Temp'}, color_discrete_sequence=['darkred'])
+        st.plotly_chart(fig_c, use_container_width=True)
+        st.warning(f"Note: This is a simulation for {selected_city} based on IPCC SSP scenarios.")
 
 else:
     st.error("Error connecting to data source.")
