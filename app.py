@@ -117,7 +117,7 @@ if df_d is not None:
         st.markdown(f"<div style='background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;'><h2 style='color:{text_c}; margin:0;'>Status: {risk_level}</h2><p style='color:{text_c}; font-size:1.2em;'>Highest Expected: {max_t:.1f} °C</p></div>", unsafe_allow_html=True)
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
         
-       st.markdown("### 🏥 Health Sector Impact & Recommendations")
+        st.markdown("### 🏥 Health Sector Impact & Recommendations")
         col1, col2 = st.columns(2)
         with col1:
             st.error("**⚠️ Possible Impacts:**\n* Heatstroke (အပူလျှပ်ခြင်း) ဖြစ်နိုင်ခြေ မြင့်မားခြင်း။\n* ရေဓာတ်ခမ်းခြောက်ခြင်းနှင့် မူးဝေခြင်း။\n* သက်ကြီးရွယ်အိုများနှင့် ကလေးငယ်များအတွက် အထူးအန္တရာယ်ရှိခြင်း။")
