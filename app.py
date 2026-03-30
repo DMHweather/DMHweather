@@ -12,14 +12,14 @@ import os
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
 # Official DMH Logo URL
-dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
+dm_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
 water_cycle_img = "image_1.png"
 
 # --- ၂။ Page Configuration ---
 st.set_page_config(
     page_title="DMH AI Weather Dashboard", 
     layout="wide", 
-    page_icon="🌤️" # Browser Tab အတွက် Standard Emoji ကို သုံးထားပါသည်
+    page_icon="🌤️" 
 )
 
 MYANMAR_CITIES_20 = {
@@ -59,8 +59,8 @@ def get_weather_data(city):
         return df_h, df_d, df_w_sample
     except: return None, None, None
 
-# --- ၃။ Sidebar (Logo အားလုံး ဤနေရာတွင် ရှိသည်) ---
-st.sidebar.image(dmh_logo_url, width=150) # DMH Logo ကို Sidebar ထိပ်ဆုံးတွင် ထားပါသည်
+# --- ၃။ Sidebar ---
+st.sidebar.image(dm_logo_url, width=150)
 st.sidebar.markdown("---")
 
 if os.path.exists(water_cycle_img):
@@ -105,7 +105,7 @@ if df_d is not None:
         fig_c.update_layout(yaxis=dict(tickmode='linear', tick0=0, dtick=1, range=[0, 8.5]))
         st.plotly_chart(fig_c, use_container_width=True)
 
-   elif view_mode == "Heatwave Monitoring (IBF)":
+    elif view_mode == "Heatwave Monitoring (IBF)":
         st.subheader(f"🔥 Impact-Based Monitoring: Extreme Heat ({selected_city})")
         
         max_t = df_d['Tmax'].max()
@@ -123,7 +123,6 @@ if df_d is not None:
 
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
 
-        # Updated IBF Health Focus Advice
         st.markdown("### 🏥 Health Sector Impact & Recommendations")
         col1, col2 = st.columns(2)
         with col1:
@@ -140,7 +139,7 @@ if df_d is not None:
 else:
     st.error("Data source unavailable.")
 
-# Data Source အသေးစိတ်များကို ဗဟိုပြု၍ ဖော်ပြခြင်း
+# Data Source Footer
 st.markdown(f"""
 <div style='text-align: center; font-size: 0.85em; color: #666; line-height: 1.6;'>
     <p><b>Forecast Data Source (16-Day):</b> Open-Meteo API (Combining ECMWF IFS, GFS, ICON, and JMA global models).</p>
