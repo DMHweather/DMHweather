@@ -7,17 +7,18 @@ import requests
 from datetime import datetime
 import pytz
 
-# --- ၁။ အချိန်ဇုန်နှင့် Logo URL ---
+# --- ၁။ အချိန်ဇုန်နှင့် Logo/Flag URLs ---
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
-# URL အနောက်တွင် ?v=1.1 ထည့်ခြင်းဖြင့် ဖုန်း Browser များကို Refresh ဖြစ်စေပါသည်
 dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
+# မြန်မာနိုင်ငံအလံကို ပုံရိပ်အနေဖြင့် အသုံးပြုခြင်း (ကွန်ပျူတာတွင်ပါ ပေါ်စေရန်)
+mm_flag_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Flag_of_Myanmar.svg/256px-Flag_of_Myanmar.svg.png"
 
-# --- ၂။ Page Configuration (🚨 ဖုန်း icon ပိုမိုသေချာစေရန်) ---
+# --- ၂။ Page Configuration ---
 st.set_page_config(
     page_title="DMH AI Weather Dashboard", 
     layout="wide", 
-    page_icon=dmh_logo_url # ဤနေရာတွင် DMH Logo ကို icon အဖြစ် သတ်မှတ်ထားသည်
+    page_icon=dmh_logo_url
 )
 
 MYANMAR_CITIES_20 = {
@@ -48,12 +49,21 @@ def get_weather_data(city):
 
 # --- Sidebar ---
 st.sidebar.image(dmh_logo_url, width=120)
-st.sidebar.markdown("### 🔍 Dashboard Controls")
-selected_city = st.sidebar.selectbox("🎯 Monitoring City", sorted(list(MYANMAR_CITIES_20.keys())))
+st.sidebar.markdown("### 🔍 Monitoring Controls")
+selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
 view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- Main Dashboard UI ---
-st.markdown(f"<h1 style='text-align: center; color: #1E88E5;'>🇲🇲 DMH AI Weather Forecast System</h1>", unsafe_allow_html=True)
+# --- 💡 Main UI (Header with Image Flag) ---
+# HTML/CSS သုံးပြီး အလံပုံကို စာသားဘေးတွင် ကပ်ထည့်ခြင်း
+st.markdown(f"""
+    <div style='text-align: center;'>
+        <h1>
+            <img src='{mm_flag_url}' width='45' style='vertical-align: middle; margin-right: 10px;'>
+            DMH AI Weather Forecast System
+        </h1>
+    </div>
+""", unsafe_allow_html=True)
+
 st.markdown(f"<p style='text-align: center;'><b>Local Time (MMT):</b> {now.strftime('%I:%M %p, %d %b %Y')}</p>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -74,7 +84,7 @@ if df_d is not None:
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['#00b4d8']), use_container_width=True)
 
     elif view_mode == "Heatwave Monitoring (IBF)":
-        st.subheader(f"🔥 Impact-Based Monitoring: Heatwave ({selected_city})")
+        st.subheader(f"🔥 Impact-Based Monitoring: Extreme Heat ({selected_city})")
         max_t = df_d['Tmax'].max()
         risk_level, color, text_c = "Low Risk", "green", "white"
         if max_t >= 42: risk_level, color = "Extreme Risk", "red"
@@ -100,4 +110,4 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'><b>DMH Myanmar | Powered by AI & Global Meteorological Data</b></p>", unsafe_allow_html=True)
-st.markdown(f"<div style='text-align: center; font-size: 0.85em; color: #666;'>Data Sources: Open-Meteo, IBF Criteria, IPCC AR6.</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='text-align: center; font-size: 0.85em; color: #666;'>Data Sources: Open-Meteo, IBF Criteria, IPCC AR6. Official System: DMH Myanmar</div>", unsafe_allow_html=True)
