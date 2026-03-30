@@ -7,12 +7,11 @@ import requests
 from datetime import datetime
 import pytz
 
-# --- ၁။ အချိန်ဇုန်နှင့် အကိုးအကား URLs ---
+# --- ၁။ အချိန်ဇုန်နှင့် Logo ---
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
+# DMH Logo URL (Official)
 dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
-# မြန်မာနိုင်ငံအလံ ပုံရိပ် (ကွန်ပျူတာတွင် အလံပေါ်စေရန် အသေချာဆုံးနည်းလမ်း)
-mm_flag_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Flag_of_Myanmar.svg/64px-Flag_of_Myanmar.svg.png"
 
 # --- ၂။ Page Configuration ---
 st.set_page_config(
@@ -53,11 +52,11 @@ st.sidebar.markdown("### 🔍 Monitoring Controls")
 selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
 view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- 💡 Main UI (Header with Forced Image Flag) ---
+# --- 💡 Main UI (Header with DMH Logo Instead of Flag) ---
 st.markdown(f"""
-    <div style='text-align: center;'>
+    <div style='text-align: center; padding-bottom: 10px;'>
         <h1 style='display: flex; align-items: center; justify-content: center; gap: 15px;'>
-            <img src='{mm_flag_url}' width='45'> 
+            <img src='{dmh_logo_url}' width='60'> 
             DMH AI Weather Forecast System
         </h1>
     </div>
@@ -70,18 +69,18 @@ df_h, df_d, df_w = get_weather_data(selected_city)
 
 if df_d is not None:
     if view_mode == "16-Day Forecast Analysis":
-        # ၁။ Wind Speed (City Name Added)
+        # ၁။ Wind Speed (City Name Included)
         st.subheader(f"💨 (1) Wind Speed (mph) & Direction - {selected_city}")
         fig_w = go.Figure()
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
         st.plotly_chart(fig_w, use_container_width=True)
 
-        # ၂။ Temp Outlook (City Name Added)
+        # ၂။ Temp Outlook (City Name Included)
         st.subheader(f"🌡️ (2) 16-Day Temperature Outlook (°C) - {selected_city}")
         st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
 
-        # ၃။ Rain Summary (City Name Added)
+        # ၃။ Rain Summary (City Name Included)
         st.subheader(f"🌧️ (3) Precipitation Summary (mm) - {selected_city}")
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['#00b4d8']), use_container_width=True)
 
@@ -97,7 +96,7 @@ if df_d is not None:
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
 
     else:
-        # Climate Projection (City Name Added)
+        # Climate Projection (City Name Included)
         st.subheader(f"🔮 IPCC Climate Projection (2100) - {selected_city}")
         years = np.arange(2026, 2101)
         temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
