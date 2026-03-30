@@ -121,7 +121,12 @@ if df_d is not None:
 else:
     st.error("Data source unavailable.")
 
-# --- ၅။ Footer & Data Sources (ပြန်လည်ထည့်သွင်းထားသည်) ---
-st.markdown("---")
-st.markdown(f"<p style='text-align: center; color: gray;'><b>DMH Myanmar | Specialized Meteorological AI System</b></p>", unsafe_allow_html=True)
-st.markdown(f"<div style='text-align: center; font-size: 0.85em; color: #666;'><b>Data Sources:</b> Open-Meteo, IBF Health Criteria, IPCC AR6 Scenarios. Official Portal: DMH Myanmar</div>", unsafe_allow_html=True)
+# Data Source အသေးစိတ်များကို ဗဟိုပြု၍ ဖော်ပြခြင်း
+st.markdown(f"""
+<div style='text-align: center; font-size: 0.85em; color: #666; line-height: 1.6;'>
+    <p><b>Forecast Data Source (16-Day):</b> Open-Meteo API (Combining ECMWF IFS, GFS, ICON, and JMA global models).</p>
+    <p><b>Heatwave Analysis:</b> Based on Impact-Based Forecasting (IBF) thresholds (P90, P95, P99) and WMO criteria.</p>
+    <p><b>Climate Data:</b> IPCC AR6 Assessment Report and CMIP6 Global Climate Models (SSP scenarios).</p>
+    <p style='margin-top: 10px; font-weight: bold;'>Official System: Department of Meteorology and Hydrology (DMH) Myanmar</p>
+</div>
+""", unsafe_allow_html=True)
