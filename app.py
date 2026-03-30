@@ -121,8 +121,11 @@ if df_d is not None:
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
         
         st.markdown("### 🏥 Health Sector Impact & Recommendations")
-        st.error("**⚠️ Possible Impacts:** Heatstroke risk is elevated. High chance of dehydration and heat exhaustion in vulnerable groups.")
-        st.success("**🛡️ Mitigation Actions:** Stay hydrated, avoid midday sun (11 AM - 4 PM), and wear light, breathable clothing.")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.error("**⚠️ Possible Impacts:**\n* Heatstroke (အပူလျှပ်ခြင်း) ဖြစ်နိုင်ခြေ မြင့်မားခြင်း။\n* ရေဓာတ်ခမ်းခြောက်ခြင်းနှင့် မူးဝေခြင်း။\n* သက်ကြီးရွယ်အိုများနှင့် ကလေးငယ်များအတွက် အထူးအန္တရာယ်ရှိခြင်း။")
+        with col2:
+            st.success("**🛡️ Mitigation Actions:**\n* နေပူထဲ တိုက်ရိုက်သွားလာခြင်းကို အတတ်နိုင်ဆုံး ရှောင်ကြဉ်ပါ။\n* ရေနှင့် ဓာတ်ဆားရည်ကို ပုံမှန်ထက် ပိုသောက်ပါ။\n* လေဝင်လေထွက်ကောင်းသော အဝတ်အစားများ ဝတ်ဆင်ပါ။")
 
     else:
         st.subheader(f"🔮 Future Climate Projection (2100) - {selected_city}")
