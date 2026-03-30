@@ -7,16 +7,17 @@ import requests
 from datetime import datetime
 import pytz
 
-# --- ၁။ အချိန်ဇုန်နှင့် Logo ---
+# --- ၁။ အချိန်ဇုန်နှင့် Logo URL ---
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
-dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png"
+# URL အနောက်တွင် ?v=1.1 ထည့်ခြင်းဖြင့် ဖုန်း Browser များကို Refresh ဖြစ်စေပါသည်
+dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
 
-# --- ၂။ Page Configuration (Phone Icon အပါအဝင်) ---
+# --- ၂။ Page Configuration (🚨 ဖုန်း icon ပိုမိုသေချာစေရန်) ---
 st.set_page_config(
     page_title="DMH AI Weather Dashboard", 
     layout="wide", 
-    page_icon=dmh_logo_url
+    page_icon=dmh_logo_url # ဤနေရာတွင် DMH Logo ကို icon အဖြစ် သတ်မှတ်ထားသည်
 )
 
 MYANMAR_CITIES_20 = {
@@ -47,11 +48,11 @@ def get_weather_data(city):
 
 # --- Sidebar ---
 st.sidebar.image(dmh_logo_url, width=120)
-st.sidebar.markdown("### 🔍 Monitoring Controls")
-selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
+st.sidebar.markdown("### 🔍 Dashboard Controls")
+selected_city = st.sidebar.selectbox("🎯 Monitoring City", sorted(list(MYANMAR_CITIES_20.keys())))
 view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- Main Dashboard ---
+# --- Main Dashboard UI ---
 st.markdown(f"<h1 style='text-align: center; color: #1E88E5;'>🇲🇲 DMH AI Weather Forecast System</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center;'><b>Local Time (MMT):</b> {now.strftime('%I:%M %p, %d %b %Y')}</p>", unsafe_allow_html=True)
 st.markdown("---")
@@ -60,8 +61,7 @@ df_h, df_d, df_w = get_weather_data(selected_city)
 
 if df_d is not None:
     if view_mode == "16-Day Forecast Analysis":
-        # ၁။ Wind, ၂။ Temp, ၃။ Rain (Vertical Stack)
-        st.subheader("💨 (1) Wind Speed & Directional Arrows")
+        st.subheader("💨 (1) Wind Speed (mph) & Directional Arrows")
         fig_w = go.Figure()
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', line=dict(color='teal', width=3)))
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
@@ -74,33 +74,22 @@ if df_d is not None:
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['#00b4d8']), use_container_width=True)
 
     elif view_mode == "Heatwave Monitoring (IBF)":
-        st.subheader(f"🔥 Impact-Based Monitoring: Extreme Heat ({selected_city})")
-        
+        st.subheader(f"🔥 Impact-Based Monitoring: Heatwave ({selected_city})")
         max_t = df_d['Tmax'].max()
         risk_level, color, text_c = "Low Risk", "green", "white"
         if max_t >= 42: risk_level, color = "Extreme Risk", "red"
         elif max_t >= 40: risk_level, color = "High Risk", "orange"
         elif max_t >= 38: risk_level, color, text_c = "Moderate Risk", "yellow", "black"
 
-        st.markdown(f"""
-        <div style="background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;">
-            <h2 style="color:{text_c}; margin:0;">Heat Risk Status: {risk_level}</h2>
-            <p style="color:{text_c}; font-size:1.2em;">Highest Expected Temperature: {max_t} °C</p>
-        </div>
-        """, unsafe_allow_html=True)
-
+        st.markdown(f"<div style='background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;'><h2 style='color:{text_c};'>Heat Risk Status: {risk_level}</h2><p style='color:{text_c};'>{max_t} °C</p></div>", unsafe_allow_html=True)
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
 
-        # Updated IBF Health Focus Advice
         st.markdown("### 🏥 Health Sector Impact & Recommendations")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.error("**⚠️ Possible Impacts:**\n* Heatstroke (အပူလျှပ်ခြင်း) ဖြစ်နိုင်ခြေ မြင့်မားခြင်း။\n* ရေဓာတ်ခမ်းခြောက်ခြင်းနှင့် မူးဝေခြင်း။\n* သက်ကြီးရွယ်အိုများနှင့် ကလေးငယ်များအတွက် အထူးအန္တရာယ်ရှိခြင်း။")
-        with col2:
-            st.success("**🛡️ Mitigation Actions:**\n* နေပူထဲ တိုက်ရိုက်သွားလာခြင်းကို အတတ်နိုင်ဆုံး ရှောင်ကြဉ်ပါ။\n* ရေနှင့် ဓာတ်ဆားရည်ကို ပုံမှန်ထက် ပိုသောက်ပါ။\n* လေဝင်လေထွက်ကောင်းသော အဝတ်အစားများ ဝတ်ဆင်ပါ။")
+        st.error("**⚠️ Possible Impacts:** Heatstroke (အပူလျှပ်ခြင်း) အန္တရာယ်ရှိနိုင်သဖြင့် ဂရုပြုပါ။")
+        st.success("**🛡️ Mitigation Actions:** နေပူထဲသွားလာခြင်း ရှောင်ရန်နှင့် ရေများများသောက်ရန်။")
 
     else:
-        st.subheader("🔮 Climate Projection (2100)")
+        st.subheader("🔮 IPCC Climate Projection (2100)")
         years = np.arange(2026, 2101)
         temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
         st.plotly_chart(px.line(x=years, y=temp_trend, labels={'x': 'Year', 'y': 'Mean Temp'}, color_discrete_sequence=['darkred']), use_container_width=True)
@@ -111,4 +100,4 @@ else:
 # --- Footer ---
 st.markdown("---")
 st.markdown(f"<p style='text-align: center; color: gray;'><b>DMH Myanmar | Powered by AI & Global Meteorological Data</b></p>", unsafe_allow_html=True)
-st.markdown(f"<div style='text-align: center; font-size: 0.85em; color: #666;'>Data Sources: Open-Meteo (ECMWF, GFS), IBF Criteria (P90/P95/P99), IPCC AR6.</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='text-align: center; font-size: 0.85em; color: #666;'>Data Sources: Open-Meteo, IBF Criteria, IPCC AR6.</div>", unsafe_allow_html=True)
