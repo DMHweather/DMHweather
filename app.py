@@ -7,10 +7,12 @@ import requests
 from datetime import datetime
 import pytz
 
-# --- ၁။ အချိန်ဇုန်နှင့် Logo ---
+# --- ၁။ အချိန်ဇုန်နှင့် အကိုးအကား URLs ---
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
 dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
+# မြန်မာနိုင်ငံအလံ ပုံရိပ် (ကွန်ပျူတာတွင် အလံပေါ်စေရန် အသေချာဆုံးနည်းလမ်း)
+mm_flag_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Flag_of_Myanmar.svg/64px-Flag_of_Myanmar.svg.png"
 
 # --- ၂။ Page Configuration ---
 st.set_page_config(
@@ -51,14 +53,16 @@ st.sidebar.markdown("### 🔍 Monitoring Controls")
 selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
 view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- Main UI Header ---
+# --- 💡 Main UI (Header with Forced Image Flag) ---
 st.markdown(f"""
     <div style='text-align: center;'>
-        <h1 style='font-family: "Segoe UI Emoji", sans-serif;'>
-            🇲🇲 DMH AI Weather Forecast System
+        <h1 style='display: flex; align-items: center; justify-content: center; gap: 15px;'>
+            <img src='{mm_flag_url}' width='45'> 
+            DMH AI Weather Forecast System
         </h1>
     </div>
 """, unsafe_allow_html=True)
+
 st.markdown(f"<p style='text-align: center;'><b>Local Time (MMT):</b> {now.strftime('%I:%M %p, %d %b %Y')}</p>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -99,7 +103,6 @@ if df_d is not None:
         temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
         fig_c = px.line(x=years, y=temp_trend, labels={'x': 'Year', 'y': 'Mean Temp'}, color_discrete_sequence=['darkred'])
         st.plotly_chart(fig_c, use_container_width=True)
-        st.warning(f"Note: This is a simulation for {selected_city} based on IPCC SSP scenarios.")
 
 else:
     st.error("Error connecting to data source.")
