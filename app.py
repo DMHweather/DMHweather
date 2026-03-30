@@ -117,10 +117,12 @@ if df_d is not None:
         st.markdown(f"<div style='background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;'><h2 style='color:{text_c}; margin:0;'>Status: {risk_level}</h2><p style='color:{text_c}; font-size:1.2em;'>Highest Expected: {max_t:.1f} °C</p></div>", unsafe_allow_html=True)
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
         
-        st.markdown("### 🏥 Health Sector Recommendations")
-        c1, c2 = st.columns(2)
-        with c1: st.error("**⚠️ Impacts:** Heatstroke risk, dehydration, and exhaustion.")
-        with c2: st.success("**🛡️ Actions:** Stay hydrated, avoid midday sun, wear loose clothing.")
+       st.markdown("### 🏥 Health Sector Impact & Recommendations")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.error("**⚠️ Possible Impacts:**\n* Heatstroke (အပူလျှပ်ခြင်း) ဖြစ်နိုင်ခြေ မြင့်မားခြင်း။\n* ရေဓာတ်ခမ်းခြောက်ခြင်းနှင့် မူးဝေခြင်း။\n* သက်ကြီးရွယ်အိုများနှင့် ကလေးငယ်များအတွက် အထူးအန္တရာယ်ရှိခြင်း။")
+        with col2:
+            st.success("**🛡️ Mitigation Actions:**\n* နေပူထဲ တိုက်ရိုက်သွားလာခြင်းကို အတတ်နိုင်ဆုံး ရှောင်ကြဉ်ပါ။\n* ရေနှင့် ဓာတ်ဆားရည်ကို ပုံမှန်ထက် ပိုသောက်ပါ။\n* လေဝင်လေထွက်ကောင်းသော အဝတ်အစားများ ဝတ်ဆင်ပါ။")
 
     else:
         st.subheader(f"🔮 Climate Projection (2100) - {selected_city}")
