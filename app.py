@@ -105,12 +105,31 @@ if df_d is not None:
         fig_c.update_layout(yaxis=dict(tickmode='linear', tick0=0, dtick=1, range=[0, 8.5]))
         st.plotly_chart(fig_c, use_container_width=True)
 
-    elif view_mode == "Heatwave Monitoring (IBF)":
-        st.subheader(f"🔥 Heatwave Monitoring - {selected_city}")
+   elif view_mode == "Heatwave Monitoring (IBF)":
+        st.subheader(f"🔥 Impact-Based Monitoring: Extreme Heat ({selected_city})")
+        
         max_t = df_d['Tmax'].max()
-        risk_color = "red" if max_t >= 40 else "orange" if max_t >= 38 else "green"
-        st.markdown(f"<div style='background-color:{risk_color}; padding:20px; border-radius:10px; text-align:center;'><h2>Max Temp: {max_t} °C</h2></div>", unsafe_allow_html=True)
-        st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd'), use_container_width=True)
+        risk_level, color, text_c = "Low Risk", "green", "white"
+        if max_t >= 42: risk_level, color = "Extreme Risk", "red"
+        elif max_t >= 40: risk_level, color = "High Risk", "orange"
+        elif max_t >= 38: risk_level, color, text_c = "Moderate Risk", "yellow", "black"
+
+        st.markdown(f"""
+        <div style="background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;">
+            <h2 style="color:{text_c}; margin:0;">Heat Risk Status: {risk_level}</h2>
+            <p style="color:{text_c}; font-size:1.2em;">Highest Expected Temperature: {max_t} °C</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
+
+        # Updated IBF Health Focus Advice
+        st.markdown("### 🏥 Health Sector Impact & Recommendations")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.error("**⚠️ Possible Impacts:**\n* Heatstroke (အပူလျှပ်ခြင်း) ဖြစ်နိုင်ခြေ မြင့်မားခြင်း။\n* ရေဓာတ်ခမ်းခြောက်ခြင်းနှင့် မူးဝေခြင်း။\n* သက်ကြီးရွယ်အိုများနှင့် ကလေးငယ်များအတွက် အထူးအန္တရာယ်ရှိခြင်း။")
+        with col2:
+            st.success("**🛡️ Mitigation Actions:**\n* နေပူထဲ တိုက်ရိုက်သွားလာခြင်းကို အတတ်နိုင်ဆုံး ရှောင်ကြဉ်ပါ။\n* ရေနှင့် ဓာတ်ဆားရည်ကို ပုံမှန်ထက် ပိုသောက်ပါ။\n* လေဝင်လေထွက်ကောင်းသော အဝတ်အစားများ ဝတ်ဆင်ပါ။")
 
     else:
         st.subheader(f"🔮 Climate Projection (2100) - {selected_city}")
