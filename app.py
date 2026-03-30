@@ -49,4 +49,79 @@ def get_weather_data(city):
             "Wind": h['windspeed_10m'], 
             "WindDir": h['winddirection_10m']
         })
-        df_d = pd.DataFrame({"Date": pd.to_datetime(d['time']), "Tmax": d['temperature_2m_max'], "Tmin": d['temperature_2m_min'], "RainSum":
+        df_d = pd.DataFrame({"Date": pd.to_datetime(d['time']), "Tmax": d['temperature_2m_max'], "Tmin": d['temperature_2m_min'], "RainSum": d['precipitation_sum']})
+        df_w_sample = df_h[df_h['Time'].dt.hour == 13].copy()
+        return df_h, df_d, df_w_sample
+    except: return None, None, None
+
+# --- Sidebar ---
+st.sidebar.image(dmh_logo_url, width=120)
+if os.path.exists(water_cycle_img):
+    st.sidebar.image(water_cycle_img, caption="Hydrological Cycle", width=150)
+
+st.sidebar.markdown("### 🔍 Monitoring Controls")
+selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
+view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
+
+# --- Main UI Header ---
+st.markdown(f"<h1 style='text-align: center;'>DMH AI Weather Forecast System</h1>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center;'><b>Local Time (MMT):</b> {now.strftime('%I:%M %p, %d %b %Y')}</p>", unsafe_allow_html=True)
+st.markdown("---")
+
+df_h, df_d, df_w = get_weather_data(selected_city)
+
+if df_d is not None:
+    if view_mode == "16-Day Forecast Analysis":
+        # ၁၊ ၂၊ ၃ ဂရပ်များ (Wind, Temp, Rain)
+        st.subheader(f"💨 Wind Speed & Direction - {selected_city}")
+        fig_w = go.Figure()
+        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
+        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
+        st.plotly_chart(fig_w, use_container_width=True)
+
+        st.subheader(f"🌡️ 16-Day Temp Outlook (°C) - {selected_city}")
+        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
+
+        st.subheader(f"🌧️ Precipitation Summary (mm) - {selected_city}")
+        st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['deepskyblue']), use_container_width=True)
+
+        st.markdown("---")
+        st.info("📊 **Extended Meteorological Parameters**")
+
+        # 🔭 Visibility Analysis
+        st.subheader(f"🔭 Visibility (km) - {selected_city}")
+        st.plotly_chart(px.line(df_h, x='Time', y='Visibility', color_discrete_sequence=['#2ecc71']), use_container_width=True)
+
+        # 💧 Relative Humidity
+        st.subheader(f"💧 Relative Humidity (%) - {selected_city}")
+        st.plotly_chart(px.area(df_h, x='Time', y='Humidity', color_discrete_sequence=['#3498db']), use_container_width=True)
+
+        # ☁️ Cloud Cover in OKTAS (8-point scale)
+        st.subheader(f"☁️ Cloud Cover (Oktas: 0-8 scale) - {selected_city}")
+        fig_c = px.bar(df_h, x='Time', y='Cloud_Okta', 
+                       color='Cloud_Okta', 
+                       color_continuous_scale='Blues',
+                       labels={'Cloud_Okta': 'Oktas'})
+        # Y-axis ကို 0 မှ 8 အထိသာ ကန့်သတ်ထားသည်
+        fig_c.update_layout(yaxis=dict(tickmode='linear', tick0=0, dtick=1, range=[0, 8.5]))
+        st.plotly_chart(fig_c, use_container_width=True)
+        st.caption("Note: 0 = Clear Sky, 4 = Half Covered, 8 = Completely Overcast")
+
+    elif view_mode == "Heatwave Monitoring (IBF)":
+        st.subheader(f"🔥 Heatwave Monitoring - {selected_city}")
+        max_t = df_d['Tmax'].max()
+        risk_color = "red" if max_t >= 40 else "orange" if max_t >= 38 else "green"
+        st.markdown(f"<div style='background-color:{risk_color}; padding:20px; border-radius:10px; text-align:center;'><h2>Max Temp: {max_t} °C</h2></div>", unsafe_allow_html=True)
+        st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd'), use_container_width=True)
+
+    else:
+        st.subheader(f"🔮 Climate Projection (2100) - {selected_city}")
+        years = np.arange(2026, 2101)
+        temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
+        st.plotly_chart(px.line(x=years, y=temp_trend, color_discrete_sequence=['darkred']), use_container_width=True)
+
+else:
+    st.error("Data source unavailable.")
+
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: gray;'>DMH Myanmar | Specialized Meteorological AI System</p>", unsafe_allow_html=True)
