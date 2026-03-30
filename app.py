@@ -76,32 +76,33 @@ if df_d is not None:
     df_d['Tmin'] = df_d['Tmin'] + temp_bias
 
     if view_mode == "16-Day Forecast Analysis":
-        # အပူချိန်
-        st.subheader(f"🌡️ Temperature Outlook (°C) - {selected_city}")
-        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
+        # ၁။ အပူချိန် (Temperature)
+        st.subheader(f"🌡️ 1. Temperature Outlook (°C) - {selected_city}")
+        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, 
+                               color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
 
-        # မိုးရွာသွန်းမှု
-        st.subheader(f"🌧️ Precipitation Summary (mm) - {selected_city}")
+        # ၂။ မိုးရေချိန် (Precipitation)
+        st.subheader(f"🌧️ 2. Daily Precipitation Summary (mm) - {selected_city}")
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['deepskyblue']), use_container_width=True)
 
-        # လေတိုက်နှုန်းနှင့် လေတိုက်ရာအရပ်
-        st.subheader(f"💨 Wind Speed (mph) & Direction - {selected_city}")
+        # ၃။ လေတိုက်နှုန်းနှင့် လေတိုက်ရာအရပ် (Wind)
+        st.subheader(f"💨 3. Wind Speed (mph) & Direction - {selected_city}")
         fig_w = go.Figure()
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
-        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', name='Direction', marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
+        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', name='Direction', 
+                                   marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
         st.plotly_chart(fig_w, use_container_width=True)
 
-        st.markdown("---")
-        # အဝေးမြင်တာ၊ စိုထိုင်းဆ၊ တိမ်
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("🔭 Visibility (km)")
-            st.plotly_chart(px.line(df_h, x='Time', y='Visibility', color_discrete_sequence=['#2ecc71']), use_container_width=True)
-        with col2:
-            st.subheader("💧 Humidity (%)")
-            st.plotly_chart(px.area(df_h, x='Time', y='Humidity', color_discrete_sequence=['#3498db']), use_container_width=True)
+        # ၄။ အဝေးမြင်တာ (Visibility)
+        st.subheader(f"🔭 4. Visibility Analysis (km) - {selected_city}")
+        st.plotly_chart(px.line(df_h, x='Time', y='Visibility', color_discrete_sequence=['#2ecc71']), use_container_width=True)
 
-        st.subheader(f"☁️ Cloud Cover (Oktas: 0-8) - {selected_city}")
+        # ၅။ စိုထိုင်းဆ (Relative Humidity)
+        st.subheader(f"💧 5. Relative Humidity (%) - {selected_city}")
+        st.plotly_chart(px.area(df_h, x='Time', y='Humidity', color_discrete_sequence=['#3498db']), use_container_width=True)
+
+        # ၆။ တိမ်အခြေအနေ (Cloud Cover in Oktas)
+        st.subheader(f"☁️ 6. Cloud Cover (Oktas: 0-8) - {selected_city}")
         fig_c = px.bar(df_h, x='Time', y='Cloud_Okta', color='Cloud_Okta', color_continuous_scale='Blues')
         fig_c.update_layout(yaxis=dict(tickmode='linear', tick0=0, dtick=1, range=[0, 8.5]))
         st.plotly_chart(fig_c, use_container_width=True)
@@ -114,27 +115,26 @@ if df_d is not None:
         elif max_t >= 40: risk_level, color = "High Risk", "orange"
         elif max_t >= 38: risk_level, color, text_c = "Moderate Risk", "yellow", "black"
 
-        st.markdown(f"<div style='background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;'><h2 style='color:{text_c}; margin:0;'>Status: {risk_level}</h2><p style='color:{text_c}; font-size:1.2em;'>Highest Expected: {max_t:.1f} °C</p></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background-color:{color}; padding:25px; border-radius:15px; text-align:center; border: 2px solid #333;'><h2 style='color:{text_c}; margin:0;'>Heat Risk Status: {risk_level}</h2><p style='color:{text_c}; font-size:1.2em;'>Highest Expected: {max_t:.1f} °C</p></div>", unsafe_allow_html=True)
+        
+        st.subheader("Daily Maximum Temperature Distribution")
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
         
         st.markdown("### 🏥 Health Sector Impact & Recommendations")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.error("**⚠️ Possible Impacts:**\n* Heatstroke (အပူလျှပ်ခြင်း) ဖြစ်နိုင်ခြေ မြင့်မားခြင်း။\n* ရေဓာတ်ခမ်းခြောက်ခြင်းနှင့် မူးဝေခြင်း။\n* သက်ကြီးရွယ်အိုများနှင့် ကလေးငယ်များအတွက် အထူးအန္တရာယ်ရှိခြင်း။")
-        with col2:
-            st.success("**🛡️ Mitigation Actions:**\n* နေပူထဲ တိုက်ရိုက်သွားလာခြင်းကို အတတ်နိုင်ဆုံး ရှောင်ကြဉ်ပါ။\n* ရေနှင့် ဓာတ်ဆားရည်ကို ပုံမှန်ထက် ပိုသောက်ပါ။\n* လေဝင်လေထွက်ကောင်းသော အဝတ်အစားများ ဝတ်ဆင်ပါ။")
+        st.error("**⚠️ Possible Impacts:** Heatstroke risk is elevated. High chance of dehydration and heat exhaustion in vulnerable groups.")
+        st.success("**🛡️ Mitigation Actions:** Stay hydrated, avoid midday sun (11 AM - 4 PM), and wear light, breathable clothing.")
 
     else:
-        st.subheader(f"🔮 Climate Projection (2100) - {selected_city}")
+        st.subheader(f"🔮 Future Climate Projection (2100) - {selected_city}")
         years = np.arange(2026, 2101)
         temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
         st.plotly_chart(px.line(x=years, y=temp_trend, labels={'y':'Mean Temp'}, color_discrete_sequence=['darkred']), use_container_width=True)
-        st.info("Projected based on SSP5-8.5 high-emission scenario analysis.")
+        st.info("Note: This projection uses CMIP6 global climate models under a high-emission scenario (SSP5-8.5).")
 
 else:
     st.error("Data source unavailable.")
 
-# --- ၅။ Data Source Footer (လူကြီးမင်းတောင်းဆိုထားသည့်အတိုင်း) ---
+# --- ၅။ Data Source Footer ---
 st.markdown("---")
 st.markdown(f"""
 <div style='text-align: center; font-size: 0.85em; color: #666; line-height: 1.6;'>
@@ -144,4 +144,3 @@ st.markdown(f"""
     <p style='margin-top: 10px; font-weight: bold;'>Official System: Department of Meteorology and Hydrology (DMH) Myanmar</p>
 </div>
 """, unsafe_allow_html=True)
-   
