@@ -6,18 +6,20 @@ import plotly.express as px
 import requests
 from datetime import datetime
 import pytz
+import os
 
-# --- ၁။ အချိန်ဇုန်နှင့် Logo ---
+# --- ၁။ အချိန်ဇုန်နှင့် Logo ဖိုင်စစ်ဆေးခြင်း ---
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
-# DMH Logo URL (Official)
-dmh_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
+
+# လူကြီးမင်း တင်ပေးထားသော logo.png ကို အသုံးပြုခြင်း
+logo_path = "logo.png"
 
 # --- ၂။ Page Configuration ---
 st.set_page_config(
     page_title="DMH AI Weather Dashboard", 
     layout="wide", 
-    page_icon=dmh_logo_url
+    page_icon=logo_path if os.path.exists(logo_path) else "🌤️"
 )
 
 MYANMAR_CITIES_20 = {
@@ -47,20 +49,19 @@ def get_weather_data(city):
     except: return None, None, None
 
 # --- Sidebar ---
-st.sidebar.image(dmh_logo_url, width=120)
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, width=120)
 st.sidebar.markdown("### 🔍 Monitoring Controls")
 selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
 view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- 💡 Main UI (Header with DMH Logo Instead of Flag) ---
-st.markdown(f"""
-    <div style='text-align: center; padding-bottom: 10px;'>
-        <h1 style='display: flex; align-items: center; justify-content: center; gap: 15px;'>
-            <img src='{dmh_logo_url}' width='60'> 
-            DMH AI Weather Forecast System
-        </h1>
-    </div>
-""", unsafe_allow_html=True)
+# --- 💡 Main UI (Local Image Header) ---
+col1, col2, col3 = st.columns([1, 4, 1])
+with col2:
+    if os.path.exists(logo_path):
+        # Logo နှင့် စာသားကို ယှဉ်တွဲပြသခြင်း
+        st.image(logo_path, width=80)
+    st.markdown(f"<h1 style='text-align: center;'>DMH AI Weather Forecast System</h1>", unsafe_allow_html=True)
 
 st.markdown(f"<p style='text-align: center;'><b>Local Time (MMT):</b> {now.strftime('%I:%M %p, %d %b %Y')}</p>", unsafe_allow_html=True)
 st.markdown("---")
@@ -69,18 +70,15 @@ df_h, df_d, df_w = get_weather_data(selected_city)
 
 if df_d is not None:
     if view_mode == "16-Day Forecast Analysis":
-        # ၁။ Wind Speed (City Name Included)
         st.subheader(f"💨 (1) Wind Speed (mph) & Direction - {selected_city}")
         fig_w = go.Figure()
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
         st.plotly_chart(fig_w, use_container_width=True)
 
-        # ၂။ Temp Outlook (City Name Included)
         st.subheader(f"🌡️ (2) 16-Day Temperature Outlook (°C) - {selected_city}")
         st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
 
-        # ၃။ Rain Summary (City Name Included)
         st.subheader(f"🌧️ (3) Precipitation Summary (mm) - {selected_city}")
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['#00b4d8']), use_container_width=True)
 
@@ -96,7 +94,6 @@ if df_d is not None:
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
 
     else:
-        # Climate Projection (City Name Included)
         st.subheader(f"🔮 IPCC Climate Projection (2100) - {selected_city}")
         years = np.arange(2026, 2101)
         temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
@@ -106,7 +103,5 @@ if df_d is not None:
 else:
     st.error("Error connecting to data source.")
 
-# --- Footer ---
 st.markdown("---")
-st.markdown(f"<p style='text-align: center; color: gray;'><b>DMH Myanmar | Powered by AI & Global Meteorological Data</b></p>", unsafe_allow_html=True)
-st.markdown(f"<div style='text-align: center; font-size: 0.85em; color: #666;'>Data Sources: Open-Meteo, IBF Criteria, IPCC AR6. Official System: DMH Myanmar</div>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; color: gray;'><b>DMH Myanmar | Powered by AI</b></p>", unsafe_allow_html=True)
