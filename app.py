@@ -81,29 +81,36 @@ if df_d is not None:
     df_d['Tmin'] += temp_bias
 
     if view_mode == "16-Day Forecast Analysis":
-        # ၁။ အပူချိန်
-        c1_1, c1_2 = st.columns([0.1, 9])
-        with c1_1: 
-            if os.path.exists(dmh_custom_logo): st.image(dmh_custom_logo, width=30)
-        with c1_2: st.subheader(f"1. Temperature Outlook (°C) - {selected_city}")
-        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
+        # ၁။ အပူချိန် (Temperature)
+        st.subheader(f"🌡️ 1. Temperature Outlook (°C) - {selected_city}")
+        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True,
+                               color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
 
-        # ၂။ မိုးရေချိန်
-        c2_1, c2_2 = st.columns([0.1, 9])
-        with c2_1: 
-            if os.path.exists(dmh_custom_logo): st.image(dmh_custom_logo, width=30)
-        with c2_2: st.subheader(f"2. Daily Precipitation Summary (mm) - {selected_city}")
+        # ၂။ မိုးရေချိန် (Precipitation)
+        st.subheader(f"🌧️ 2. Daily Precipitation Summary (mm) - {selected_city}")
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['deepskyblue']), use_container_width=True)
 
-        # ၃။ လေတိုက်နှုန်း
-        c3_1, c3_2 = st.columns([0.1, 9])
-        with c3_1: 
-            if os.path.exists(dmh_custom_logo): st.image(dmh_custom_logo, width=30)
-        with c3_2: st.subheader(f"3. Wind Speed & Direction - {selected_city}")
+        # ၃။ လေတိုက်နှုန်းနှင့် လေတိုက်ရာအရပ် (Wind)
+        st.subheader(f"💨 3. Wind Speed (mph) & Direction - {selected_city}")
         fig_w = go.Figure()
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
-        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
+        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', name='Direction',
+                                   marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
         st.plotly_chart(fig_w, use_container_width=True)
+
+        # ၄။ အဝေးမြင်တာ (Visibility)
+        st.subheader(f"🔭 4. Visibility Analysis (km) - {selected_city}")
+        st.plotly_chart(px.line(df_h, x='Time', y='Visibility', color_discrete_sequence=['#2ecc71']), use_container_width=True)
+
+        # ၅။ စိုထိုင်းဆ (Relative Humidity)
+        st.subheader(f"💧 5. Relative Humidity (%) - {selected_city}")
+        st.plotly_chart(px.area(df_h, x='Time', y='Humidity', color_discrete_sequence=['#3498db']), use_container_width=True)
+
+        # ၆။ တိမ်အခြေအနေ (Cloud Cover in Oktas)
+        st.subheader(f"☁️ 6. Cloud Cover (Oktas: 0-8) - {selected_city}")
+        fig_c = px.bar(df_h, x='Time', y='Cloud_Okta', color='Cloud_Okta', color_continuous_scale='Blues')
+        fig_c.update_layout(yaxis=dict(tickmode='linear', tick0=0, dtick=1, range=[0, 8.5]))
+        st.plotly_chart(fig_c, use_container_width=True)
 
     elif view_mode == "Heatwave Monitoring (IBF)":
         if os.path.exists(dmh_custom_logo): st.image(dmh_custom_logo, width=60)
