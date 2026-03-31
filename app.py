@@ -8,11 +8,12 @@ from datetime import datetime
 import pytz
 import os
 
-# --- ၁။ အချိန်ဇုန်နှင့် ပုံများ ---
+# --- ၁။ အချိန်ဇုန်နှင့် Logo ပတ်လမ်းကြောင်း ---
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
-dm_logo_url = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
-water_cycle_img = "image_1.png"
+# လူကြီးမင်းပေးထားသော Logo ပုံ (Local Folder ထဲတွင် logo.png အမည်ဖြင့် ရှိနေရပါမည်)
+dmh_custom_logo = "logo.png" 
+dm_header_logo = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
 
 # --- ၂။ Page Configuration ---
 st.set_page_config(page_title="DMH AI Weather Dashboard", layout="wide", page_icon="🌤️")
