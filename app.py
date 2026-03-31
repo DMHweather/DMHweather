@@ -40,7 +40,8 @@ MYANMAR_CITIES_30 = {
 
 @st.cache_data(ttl=300)
 def get_weather_data(city):
-    lat, lon = MYANMAR_CITIES_20[city]['lat'], MYANMAR_CITIES_20[city]['lon']
+    # MYANMAR_CITIES_30 သို့ ပြောင်းလဲပြင်ဆင်ထားပါသည်
+    lat, lon = MYANMAR_CITIES_30[city]['lat'], MYANMAR_CITIES_30[city]['lon']
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,relative_humidity_2m,cloud_cover,visibility,precipitation,windspeed_10m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
     try:
         r = requests.get(url, timeout=10).json()
@@ -56,7 +57,7 @@ def get_weather_data(city):
         return df_h, df_d, df_h[df_h['Time'].dt.hour == 13].copy()
     except: return None, None, None
 
-# --- ၃။ Sidebar ---
+# --- ၄။ Sidebar ---
 st.sidebar.image(dm_header_logo, width=120)
 st.sidebar.markdown("---")
 if os.path.exists(dmh_custom_logo):
@@ -66,10 +67,11 @@ st.sidebar.markdown("### ⚙️ Bias Correction")
 temp_bias = st.sidebar.slider("🌡️ Temp Offset (°C)", -5.0, 5.0, 0.0, step=0.5)
 
 st.sidebar.markdown("---")
-selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_20.keys())))
+# Selectbox ကို MYANMAR_CITIES_30 ဖြင့် ချိတ်ဆက်ထားပါသည်
+selected_city = st.sidebar.selectbox("🎯 Select City", sorted(list(MYANMAR_CITIES_30.keys())))
 view_mode = st.sidebar.radio("📊 Analysis View", ["16-Day Forecast Analysis", "Heatwave Monitoring (IBF)", "Climate Projection (2100)"])
 
-# --- ၄။ Main UI Header ---
+# --- ၅။ Main UI Header ---
 h_col1, h_col2 = st.columns([1, 6])
 with h_col1:
     if os.path.exists(dmh_custom_logo): st.image(dmh_custom_logo, width=80)
@@ -97,7 +99,7 @@ if df_d is not None:
         # ၃။ လေတိုက်နှုန်းနှင့် လေတိုက်ရာအရပ် (Wind)
         st.subheader(f"💨 3. Wind Speed (mph) & Direction - {selected_city}")
         fig_w = go.Figure()
-        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed', line=dict(color='teal', width=3)))
+        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='markers+lines', name='Speed', line=dict(color='teal', width=3)))
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+1.5, mode='markers', name='Direction',
                                    marker=dict(symbol='arrow', size=18, angle=df_w['WindDir'], color='red')))
         st.plotly_chart(fig_w, use_container_width=True)
@@ -127,7 +129,6 @@ if df_d is not None:
         
         st.plotly_chart(px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd').add_hline(y=40, line_dash="dash", line_color="red"), use_container_width=True)
         
-        # --- 🏥 Health Sector Impact & Recommendations ---
         st.markdown("### 🏥 Health Sector Impact & Recommendations")
         col1, col2 = st.columns(2)
         with col1:
@@ -142,7 +143,7 @@ if df_d is not None:
         temp_trend = [30 + (y-2026)*0.043 + np.random.normal(0, 0.5) for y in years]
         st.plotly_chart(px.line(x=years, y=temp_trend, labels={'y':'Mean Temp'}, color_discrete_sequence=['darkred']), use_container_width=True)
 
-# --- ၅။ Data Source Footer ---
+# --- ၆။ Data Source Footer ---
 st.markdown("---")
 st.markdown(f"""
 <div style='text-align: center; font-size: 0.85em; color: #666; line-height: 1.6;'>
