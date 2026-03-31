@@ -19,33 +19,6 @@ dm_header_logo = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
 # --- ၂။ Page Configuration ---
 st.set_page_config(page_title="DMH AI Weather Dashboard", layout="wide", page_icon="🌤️")
 
-ဟုတ်ကဲ့ပါဗျာ၊ လူကြီးမင်း ပေးပို့ထားတဲ့ Code ထဲမှာ မြို့အမည်စာရင်း (Variable Name) မတူညီမှုကြောင့် ဖြစ်ပေါ်နေတဲ့ Error ကို အဓိကပြင်ဆင်ပေးထားပြီး၊ ကျန်ခဲ့တဲ့ Graphs တွေနဲ့ Footer အပိုင်းတွေကိုလည်း တစ်ခုမကျန် အပြည့်အစုံ ပြန်လည်ပေါင်းစပ်ပေးထားပါတယ်။
-
-အခု Code မှာ MYANMAR_CITIES_30 ကိုသာ အခြေခံပြီး တစ်လျှောက်လုံး အသုံးပြုသွားမှာ ဖြစ်ပါတယ်။
-
-DMH AI Weather Forecast System (Final & Complete Version)
-Python
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
-import requests
-from datetime import datetime
-import pytz
-import os
-
-# --- ၁။ အချိန်ဇုန်နှင့် Logo အမည်သတ်မှတ်ခြင်း ---
-mm_tz = pytz.timezone('Asia/Yangon')
-now = datetime.now(mm_tz)
-
-# လူကြီးမင်းပေးထားသော Logo ဖိုင်အမည်
-dmh_custom_logo = "logo.png" 
-dm_header_logo = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
-
-# --- ၂။ Page Configuration ---
-st.set_page_config(page_title="DMH AI Weather Dashboard", layout="wide", page_icon="🌤️")
-
 # --- ၃။ မြို့ကြီး ၃၀ စာရင်း (Verified Dictionary) ---
 MYANMAR_CITIES_30 = {
     "Naypyidaw": {"lat": 19.7633, "lon": 96.0785}, "Yangon (Kaba-aye)": {"lat": 16.8661, "lon": 96.1951},
