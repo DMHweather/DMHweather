@@ -23,9 +23,9 @@ LANG_DICT = {
         "time_label": "Current Local Time (MMT)",
         "city_select": "🎯 Select Station/City",
         "view_mode": "📊 View Mode",
-        "modes": ["16-Day Detailed Analysis", "Heatwave Monitoring (IBF-Health)", "Climate Projection (2100)"],
+        "modes": ["16-Day Detailed Analysis", "Heatwave Monitoring (IBF-Health)", "Climate Projection (2100-SSP5-8.5)"],
         "charts": [
-            "🌡️ 1. Temperature Outlook (°C)", 
+            "🌡️ 1. Temperature Outlook (°C)",
             "🌧️ 2. Daily Precipitation Summary (mm)", 
             "💨 3. Wind Speed (mph) & Direction", 
             "🔭 4. Visibility (km)", 
@@ -47,7 +47,7 @@ LANG_DICT = {
         "time_label": "လက်ရှိ မြန်မာစံတော်ချိန်",
         "city_select": "🎯 စခန်း/မြို့အမည်ရွေးချယ်ပါ",
         "view_mode": "📊 ကြည့်ရှုမည့်ပုံစံ",
-        "modes": ["၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀)"],
+        "modes": ["၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)"],
         "charts": [
             "🌡️ ၁။ အပူချိန်ခန့်မှန်းချက် (ဒီဂရီဆဲလ်စီးရပ်)", 
             "🌧️ ၂။ မိုးရေချိန်ခန့်မှန်းချက် (မီလီမီတာ)", 
