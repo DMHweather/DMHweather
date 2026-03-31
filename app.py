@@ -19,9 +19,9 @@ dm_header_logo = "https://www.moezala.gov.mm/themes/custom/dmh/logo.png?v=1.1"
 # --- ၂။ Page Configuration ---
 st.set_page_config(page_title="DMH AI Weather Dashboard", layout="wide", page_icon="🌤️")
 
-# မြို့ကြီးများစာရင်း
+# --- ၃။ မြို့ကြီး ၃၀ စာရင်း (Variable Name ကို MYANMAR_CITIES_30 ဟု ပေးထားပါသည်) ---
 MYANMAR_CITIES_30 = {
-    "Naypyidaw": {"lat": 19.7633, "lon": 96.0785}, "Yangon(Kaba-aye)": {"lat": 16.8661, "lon": 96.1951},
+    "Naypyidaw": {"lat": 19.7633, "lon": 96.0785}, "Yangon (Kaba-aye)": {"lat": 16.8661, "lon": 96.1951},
     "Pyinmana": {"lat": 19.7414, "lon": 96.2004}, "Bawlakhae": {"lat": 19.1576, "lon": 97.3328},
     "Dagon (Seikan)": {"lat": 16.8489, "lon": 96.2734}, "Dagon (South)": {"lat": 16.8840, "lon": 96.2400},
     "Hlaing Thayar": {"lat": 16.8812, "lon": 96.0503}, "Shwe Pyithar": {"lat": 16.9759, "lon": 96.0760},
