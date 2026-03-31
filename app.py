@@ -99,24 +99,54 @@ MYANMAR_CITIES = {
     "Hkamti": {"lat": 25.9977, "lon": 95.6905}, "Dawei": {"lat": 14.0833, "lon": 98.2000}
 }
 
+# --- ၄။ API Function (With Full Error Handling) ---
 @st.cache_data(ttl=300)
 def get_full_weather(city):
     lat, lon = MYANMAR_CITIES[city]['lat'], MYANMAR_CITIES[city]['lon']
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,relative_humidity_2m,cloud_cover,visibility,precipitation,windspeed_10m,winddirection_10m,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
+    
     try:
-        r = requests.get(url, timeout=10).json()
+        response = requests.get(url, timeout=15)
+        response.raise_for_status()
+        r = response.json()
+        
+        if "hourly" not in r or "daily" not in r:
+            return None, None
+            
         h, d = r['hourly'], r['daily']
-        df_h = pd.DataFrame({
-            "Time": pd.to_datetime(h['time']), "Temp": h['temperature_2m'], "Humidity": h['relative_humidity_2m'],
-            "Visibility": np.array(h['visibility']) / 1000, "Cloud": [round((c/100)*8) for c in h['cloud_cover']],
-            "Wind": h['windspeed_10m'], "WindDir": h['winddirection_10m'], "Rain": h['precipitation'],
-            "Storm": [min(round((c/3500)*100), 100) for c in h['cape']]
-        })
-        df_d = pd.DataFrame({"Date": pd.to_datetime(d['time']), "Tmax": d['temperature_2m_max'], "Tmin": d['temperature_2m_min'], "RainSum": d['precipitation_sum']})
-        return df_h, df_d
-    except: return None, None
+        
+        # Robust Data Processing (Check for None types)
+        # Visibility Calculation
+        raw_vis = h.get('visibility', [])
+        visibility_km = [(v / 1000) if v is not None else 0 for v in raw_vis]
 
-# --- ၄။ Sidebar ---
+        # Hourly DataFrame
+        df_h = pd.DataFrame({
+            "Time": pd.to_datetime(h.get('time', [])), 
+            "Temp": h.get('temperature_2m', []), 
+            "Humidity": h.get('relative_humidity_2m', []),
+            "Visibility": visibility_km, 
+            "Cloud": [round((c/100)*8) if (c is not None and c >= 0) else 0 for c in h.get('cloud_cover', [])],
+            "Wind": h.get('windspeed_10m', []), 
+            "WindDir": h.get('winddirection_10m', []), 
+            "Rain": h.get('precipitation', []),
+            "Storm": [min(round((c/3500)*100), 100) if (c is not None and c >= 0) else 0 for c in h.get('cape', [])]
+        })
+        
+        # Daily DataFrame
+        df_d = pd.DataFrame({
+            "Date": pd.to_datetime(d.get('time', [])), 
+            "Tmax": d.get('temperature_2m_max', []), 
+            "Tmin": d.get('temperature_2m_min', []), 
+            "RainSum": d.get('precipitation_sum', [])
+        })
+        
+        return df_h, df_d
+
+    except Exception:
+        return None, None
+
+# --- ၅။ Sidebar ---
 st.sidebar.image(dm_header_logo, width=120)
 lang = st.sidebar.selectbox("🌐 Language", ["English", "မြန်မာ"])
 T = LANG_DICT[lang]
@@ -127,80 +157,82 @@ st.sidebar.write(f"📍 Lat: `{MYANMAR_CITIES[selected_city]['lat']}`, Lon: `{MY
 temp_bias = st.sidebar.slider("🌡️ Bias Correction (°C)", -5.0, 5.0, 0.0, step=0.5)
 view_mode = st.sidebar.radio(T["view_mode"], T["modes"])
 
-# --- ၅။ Main Display ---
+# --- ၆။ Main Display ---
 st.markdown(f"# {T['title']}")
 st.markdown(f"🕒 **{T['time_label']}:** `{formatted_now}` | 📍 **Station:** `{selected_city}`")
 st.info(T["dmh_alert"])
 
 df_h, df_d = get_full_weather(selected_city)
 
-if df_h is not None:
+if df_h is not None and df_d is not None and not df_h.empty:
+    # Apply Bias Correction
     df_d['Tmax'] += temp_bias
     df_d['Tmin'] += temp_bias
     df_h['Temp'] += temp_bias
 
-    # Daily Summary Metrics (အသစ်ထည့်ထားသည်)
+    # Daily Summary Metrics
     m1, m2, m3 = st.columns(3)
     m1.metric("Max Temp Today", f"{df_d['Tmax'].iloc[0]:.1f} °C")
     m2.metric("Min Temp Today", f"{df_d['Tmin'].iloc[0]:.1f} °C")
     m3.metric("Rainfall Today", f"{df_d['RainSum'].iloc[0]:.1f} mm")
 
     if view_mode == T["modes"][0]: 
+        # Detailed 16-Day View
         st.subheader(T['charts'][0])
         st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax':'red','Tmin':'blue'}), use_container_width=True)
+        
         st.markdown("---")
         st.subheader(T['charts'][1])
         st.plotly_chart(px.bar(df_d, x='Date', y='RainSum', color_discrete_sequence=['deepskyblue']), use_container_width=True)
+        
         st.markdown("---")
         st.subheader(T['charts'][2]) 
-        df_w = df_h[df_h['Time'].dt.hour == 13]
+        df_w = df_h[df_h['Time'].dt.hour == 13].copy() # 1 PM analysis
         fig_w = go.Figure()
         fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind'], mode='lines+markers', name='Speed'))
-        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+2, mode='markers', marker=dict(symbol='arrow', angle=df_w['WindDir'], size=14, color='red'), name='Dir'))
+        fig_w.add_trace(go.Scatter(x=df_w['Time'], y=df_w['Wind']+2, mode='markers', 
+                                   marker=dict(symbol='arrow', angle=df_w['WindDir'], size=14, color='red'), name='Dir'))
         st.plotly_chart(fig_w, use_container_width=True)
+        
         st.markdown("---")
         st.subheader(T['charts'][3]) 
         st.plotly_chart(px.line(df_h, x='Time', y='Visibility', color_discrete_sequence=['#2ecc71']), use_container_width=True)
+        
         st.markdown("---")
         st.subheader(T['charts'][4])
         st.plotly_chart(px.area(df_h, x='Time', y='Humidity', color_discrete_sequence=['#3498db']), use_container_width=True)
+        
         st.markdown("---")
         st.subheader(T['charts'][5])
         st.plotly_chart(px.bar(df_h, x='Time', y='Cloud', color='Cloud'), use_container_width=True)
+        
         st.markdown("---")
         st.subheader(T['charts'][6])
         st.warning(T["storm_note"]) 
         st.plotly_chart(px.bar(df_h, x='Time', y='Storm', color_discrete_sequence=['#e67e22'], labels={'Storm':'Thunderstorm %'}), use_container_width=True)
 
     elif view_mode == T["modes"][1]: 
+        # Heatwave IBF View
         max_t = df_d['Tmax'].max()
         idx = 0 if max_t >= 42 else 1 if max_t >= 40 else 2 if max_t >= 38 else 3
+        
         st.markdown(f"<div style='background-color:{['#800000','#d00000','#ffaa00','#008000'][idx]}; padding:35px; border-radius:15px; text-align:center;'><h1 style='color:white;'>{T['risk_levels'][idx]}: {max_t:.1f} °C</h1></div>", unsafe_allow_html=True)
+        
         st.subheader(T['ibf_header'])
         st.error(f"⚠️ **Impact:**\n\n{T['impacts'][idx]}")
         st.success(f"💡 **Recommendations:**\n\n{T['recommends'][idx]}")
         
         fig_ibf = px.bar(df_d, x='Date', y='Tmax', color='Tmax', color_continuous_scale='YlOrRd')
-        fig_ibf.add_hline(y=42, line_dash="dash", line_color="maroon", annotation_text="Extreme (42°C)")
-        fig_ibf.add_hline(y=40, line_dash="dash", line_color="red", annotation_text="High (40°C)")
-        fig_ibf.add_hline(y=38, line_dash="dash", line_color="orange", annotation_text="Moderate (38°C)")
+        for val, color, label in [(42, "maroon", "Extreme"), (40, "red", "High"), (38, "orange", "Moderate")]:
+            fig_ibf.add_hline(y=val, line_dash="dash", line_color=color, annotation_text=f"{label} ({val}°C)")
         st.plotly_chart(fig_ibf, use_container_width=True)
 
         st.markdown("---")
-        # ၁။ Download အတွက် Dataframe ကို Column အသစ်များဖြင့် ပြင်ဆင်ခြင်း
-        # Date, Tmax, Tmin, RainSum (Daily Total Rainfall) နှင့် Station တို့ကို ယူပါမည်
+        # CSV Export
         export_df = df_d[['Date', 'Tmax', 'Tmin', 'RainSum']].copy()
-        
-        # ၂။ စခန်းအမည် Column အသစ်ထည့်ခြင်း
         export_df['Station'] = selected_city
-        
-        # ၃။ ရက်စွဲ Format ပြင်ခြင်း (ဥပမာ - 2026-03-31)
         export_df['Date'] = export_df['Date'].dt.strftime('%Y-%m-%d')
-        
-        # ၄။ Column အမည်များကို ပိုမိုရှင်းလင်းအောင် ပြောင်းလဲခြင်း (Optional)
         export_df.columns = ['Date', 'Max_Temp_C', 'Min_Temp_C', 'Daily_Rainfall_mm', 'Station_Name']
-
-        # CSV အဖြစ် ပြောင်းလဲခြင်း (မြန်မာစာလုံးများ Excel တွင် မှန်ကန်စေရန် utf-8-sig သုံးထားပါသည်)
         csv_data = export_df.to_csv(index=False).encode('utf-8-sig')
 
         st.download_button(
@@ -211,15 +243,17 @@ if df_h is not None:
             key='download-full-csv'
         )
 
-    
-
     else: 
-         st.subheader(T['modes'][2])
-         years = np.arange(2026, 2101)
-         trend = [30 + (y-2026)*0.045 + np.random.normal(0, 0.4) for y in years]
-         st.plotly_chart(px.line(x=years, y=trend, color_discrete_sequence=['darkred']), use_container_width=True)
+        # Climate Projection View
+        st.subheader(T['modes'][2])
+        years = np.arange(2026, 2101)
+        trend = [30 + (y-2026)*0.045 + np.random.normal(0, 0.4) for y in years]
+        st.plotly_chart(px.line(x=years, y=trend, color_discrete_sequence=['darkred']), use_container_width=True)
+        st.warning("⚠️ **Climate Risk Note:** Under the SSP 5-8.5 scenario, Myanmar could face significantly higher frequency of extreme heat and unpredictable monsoon patterns by the end of the century.")
 
-         st.warning("⚠️ **Climate Risk Note:** Under the SSP 5-8.5 scenario, Myanmar could face significantly higher frequency of extreme heat and unpredictable monsoon patterns by the end of the century.")
+else:
+    st.error("⚠️ အချက်အလက်များ ရယူ၍မရနိုင်ပါ (API Error)။ အင်တာနက်ချိတ်ဆက်မှုကို စစ်ဆေးပြီး Refresh ပြန်လုပ်ပေးပါ။")
+
 
 # --- ၆။ Data Source Footer ---
 st.markdown("---")
