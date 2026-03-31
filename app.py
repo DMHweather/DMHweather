@@ -24,6 +24,8 @@ MYANMAR_CITIES_20 = {
     "Pathein": {"lat": 16.7833, "lon": 94.7333}, "Pyay": {"lat": 18.8167, "lon": 95.2167},
     "Taungoo": {"lat": 18.9333, "lon": 96.4333}, "Hinthada": {"lat": 17.6500, "lon": 95.3833},
     "Myitkyina": {"lat": 25.3831, "lon": 97.3964}, "Taunggyi": {"lat": 20.7888, "lon": 97.0333},
+    "Kawthaung": {"lat": 10.0013, "lon": 95.5584}, "Myeik": {"lat": 12.4492, "lon": 98.6271},
+    "Hakha": {"lat": 22.6407, "lon": 93.6041}, "Kyaukpyu": {"lat": 19.4212, "lon": 93.5458},
     "Minbu": {"lat": 20.1648, "lon": 94.8777}, "Chauk": {"lat": 20.8941, "lon": 94.8205},
     "Mawlamyine": {"lat": 16.4905, "lon": 97.6282}, "Sittwe": {"lat": 20.1436, "lon": 92.8977},
     "Lashio": {"lat": 22.9333, "lon": 97.7500}, "Hpa-An": {"lat": 16.8906, "lon": 97.6333},
