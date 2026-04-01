@@ -235,6 +235,22 @@ if df_h is not None:
                 except Exception as e:
                     st.error(f"CSV ထုတ်ယူရာတွင် အမှားအယွင်းရှိနေပါသည် - {e}")
 
+    # Download ခလုတ်၏ အောက်တွင် ထည့်ရန်
+                st.markdown("---")
+                st.markdown("""
+                <div style='background-color: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 5px solid #007bff;'>
+                    <h4 style='color: #007bff; margin-top: 0;'>📝 ဇယားတွင် ပါဝင်သည့် ဒေတာများရှင်းလင်းချက်</h4>
+                    <ul style='list-style-type: none; padding-left: 0; line-height: 1.8;'>
+                        <li><b>၁။ အမြင့်ဆုံးအပူချိန်:</b> နေ့တစ်နေ့၏ ဖြစ်ပေါ်နိုင်သော အမြင့်ဆုံးအပူချိန် (Max Temp)</li>
+                        <li><b>၂။ အနိမ့်ဆုံးအပူချိန်:</b> နေ့တစ်နေ့၏ ဖြစ်ပေါ်နိုင်သော အနိမ့်ဆုံးအပူချိန် (Min Temp)</li>
+                        <li><b>၃။ မိုးရေချိန် (၂၄ နာရီ):</b> ယခင်နေ့ နံနက် ၀၉:၃၀ နာရီမှ ယနေ့နံနက် ၀၉:၃၀ နာရီအထိ ၂၄ နာရီအတွင်း ရွာသွန်းသော စုစုပေါင်းမိုးရေချိန်</li>
+                    </ul>
+                    <p style='font-size: 0.85em; color: #666; font-style: italic; margin-top: 10px;'>
+                        *မှတ်ချက်။ ။ အထက်ပါဒေတာများသည် DMH ၏ စံသတ်မှတ်ချက်များနှင့်အညီ တွက်ချက်ဖော်ပြထားခြင်း ဖြစ်ပါသည်။
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+
     # Climate Change View Mode
     elif view_mode == T["modes"][2]:
         st.subheader("🌡️ Climate Projection (2026-2100)")
