@@ -5,7 +5,7 @@ Pyinmana,19.72,96.22
 Ela(Airport),19.61,96.19
 Laiway,19.44,96.75
 Zayarthiri,19.88,96.36
-MOTC,19.8,96
+Motc,19.8,96
 Dekkhinathiri,19.68,96.09
 No(2)DSGH,19.89,96.26
 Otarathiri,19.74,96.08
@@ -21,7 +21,6 @@ Ooco-Island,14.12,93.37
 Okkan,17.5,95.85
 Hlegu,17.09,96.21
 North-Dagon,16.89,96.19
-Madauk,16.43,96.01
 Pyinoolwin,22.02,96.47
 Mandalay,21.98,96.1
 Myeikhtila,20.83,95.83
@@ -40,7 +39,7 @@ Bago,17.33,96.5
 Shwegyin,17.92,96.87
 Nyaunglaybin,17.95,96.72
 Phyu,18.5,96.45
-Taungoo (avia),19.03,96.4
+Taungoo (Avia),19.03,96.4
 Pyay,18.8,95.22
 Thayarwady,17.63,95.8
 Kyobinkauk,18.22,95.67
@@ -105,15 +104,15 @@ Hpa-an(Agro),16.88,97.63
 Kawkayeik,16.5,98.25
 Myawady,16.68,98.5
 Hlaingbwe,17.12,97.82
-Kya-In-Seikkyi,16.04,98.12
+Kyainseikkyi,16.04,98.12
 Tandaunggyi,19.97,96.67
 Shwegwin,17.16,97.64
 Paing Kyone,17.01,97.59
-Shan Ywar Thit,17.43,97.88
+Shanywarthit,17.43,97.88
 Kamamaung,17.34,97.63
 Hpapun,18,97.35
 Kyaikdon,16,98.39
-Payar Thonesu,15.13,98.38
+Payathonesu,15.13,98.38
 Mindat,21.38,93.95
 Hakha,22.65,93.62
 Paletwa,21.3,92.85
@@ -167,8 +166,8 @@ Mongyang,21.84,99.68
 Singu,22.54,95.99
 Thabeikkyin,22.89,95.98
 Myit Nge,21.85,96.07
-Singaing(s),21.95,96.04
-Taungtha(),21.29,95.44
+Singaing,21.95,96.04
+Taungtha,21.29,95.44
 Ta gaung,23.49,96.01
 Patheingyi,21.99,96.16
 Nganzun,21.89,95.69
@@ -227,7 +226,6 @@ Mawkmai,20.23,97.73
 Langkho,20.34,98
 Mongpan,20.32,98.37
 Pintaya,97.28,21.57
-YwarNgan,96.75,21.28
 Mongton,99.17,20.48
 Homein,98.33,20.27
 Laihka,98.23,21.48
