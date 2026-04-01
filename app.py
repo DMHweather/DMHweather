@@ -140,7 +140,7 @@ if df_h is not None:
         
         # ၃။ လေတိုက်နှုန်းနှင့် လားရာ
         fig_wind = go.Figure()
-        fig_wind.add_trace(go.Scatter(x=df_h['Time'], y=df_h['Wind'], mode='lines', name='Wind Speed', line=dict(color='black', width=1)))
+        fig_wind.add_trace(go.Scatter(x=df_h['Time'], y=df_h['Wind'], mode='lines', name='Wind Speed', line=dict(color='blue', width=1)))
         df_arrow = df_h.iloc[::6, :] 
         fig_wind.add_trace(go.Scatter(
             x=df_arrow['Time'], y=df_arrow['Wind'], mode='markers',
