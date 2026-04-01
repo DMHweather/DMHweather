@@ -9,7 +9,7 @@ from datetime import datetime
 import pytz
 
 # --- ၁။ Layout Setup ---
-st.set_page_config(page_title="DMH AI Weather Dashboard", layout="wide", page_icon="🌤️")
+st.set_page_config(page_title="DMH AI Weather Forecasting System", layout="wide", page_icon="🌤️")
 # အခုနက Code ကို ဒီနေရာမှာ ထည့်ပါ (စာကြောင်း ၁၂ ဝန်းကျင်)
 st.markdown("""
     <meta name="apple-mobile-web-app-capable" content="yes">
