@@ -52,7 +52,7 @@ LANG_DATA = {
         "risk_levels": ["Extreme Risk", "High Risk", "Moderate Risk", "Low Risk"],
         "charts": ["🌡️ 1. Temperature(°C)", "🌧️ 2. Precipitation(mm)", "💨 3. Wind Speed (mph) & Direction", "🔭 4. Visibility (km)", "💧 5. Humidity (%)", "☁️ 6. Cloud Cover (Oktas: 0-8)", "⚡ 7. Thunderstorm & Lightning Probability (%)"],
         "impact_list": ["Extreme danger! Heatstroke possible.", "High danger! Fatigue possible.", "Caution! Sun exposure may cause fatigue.", "Normal conditions."],
-        "recom_list": ["Stay indoors. Drink 3-4L water.", "Work morning/evening only. Use umbrella.", "Wear light clothes. Rest in shade.", "Stay hydrated and follow updates."]
+        "recom_list": ["Stay indoors. Drink 3-4L water, Follow DMH news for the latest weather updates.", "Work morning/evening only. Use umbrella, Follow DMH news for the latest weather updates.", "Wear light clothes. Rest in shade, Follow DMH news for the latest weather updates.", "Stay hydrated and follow updates, Follow DMH news for the latest weather updates."]
     }
 }
 
