@@ -10,6 +10,12 @@ import pytz
 
 # --- ၁။ Layout Setup ---
 st.set_page_config(page_title="DMH AI Weather Dashboard", layout="wide", page_icon="🌤️")
+# အခုနက Code ကို ဒီနေရာမှာ ထည့်ပါ (စာကြောင်း ၁၂ ဝန်းကျင်)
+st.markdown("""
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DMH AI">
+""", unsafe_allow_html=True)
 
 mm_tz = pytz.timezone('Asia/Yangon')
 now = datetime.now(mm_tz)
