@@ -148,7 +148,7 @@ if df_h is not None and df_d is not None:
      # 3. Wind Speed & Direction (Fixed with Arrows)
         st.subheader(T["charts"][2])
         fig3 = go.Figure()
-        fig3.add_trace(go.Scatter(x=df_h['Time'], y=df_h['Wind'], mode='lines', name='Wind Speed', line=dict(color='green', width=2)))
+        fig3.add_trace(go.Scatter(x=df_h['Time'], y=df_h['Wind'], mode='lines', name='Wind Speed', line=dict(color='red', width=2)))
         
         if 'WindDir' in df_h.columns:
             df_arrows = df_h.iloc[::6] 
