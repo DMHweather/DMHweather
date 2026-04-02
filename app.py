@@ -59,7 +59,7 @@ LANG_DATA = {
         "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
         "ibf_header": "🏥 Health Sector Impacts & Recommendations",
         "risk_levels": ["Extreme Risk", "High Risk", "Moderate Risk", "Low Risk"],
-         "charts": ["🌡️ 1. Temperature(°C)", "🌧️ 2. Precipitation(mm)", "💨 3. Wind Speed (mph) & Direction", "🔭 4. Visibility (km)", "💧 5. Humidity (%)", "☁️ 6. Cloud Cover (Oktas: 0-8)", "⚡ 7. Thunderstorm & Lightning Probability (%)"],
+        "charts": ["🌡️ 1. Temperature(°C)", "🌧️ 2. Precipitation(mm)", "💨 3. Wind Speed (mph) & Direction", "🔭 4. Visibility (km)", "💧 5. Humidity (%)", "☁️ 6. Cloud Cover (Oktas: 0-8)", "⚡ 7. Thunderstorm & Lightning Probability (%)"],
         "impact_list": ["Extreme danger! Heatstroke possible.", "High danger! Fatigue possible.", "Caution! Sun exposure may cause fatigue.", "Normal conditions."],
         "recom_list": ["Stay indoors. Drink 3-4L water, Follow DMH news for the latest weather updates.", "Work morning/evening only. Use umbrella, Follow DMH news for the latest weather updates.", "Wear light clothes. Rest in shade, Follow DMH news for the latest weather updates.", "Stay hydrated and follow updates, Follow DMH news for the latest weather updates."]
     }
@@ -89,53 +89,24 @@ selected_city = st.sidebar.selectbox(T["station_label"], city_list, key="city_se
 view_mode_choice = st.sidebar.radio(T["view_mode_label"], T["modes"], key="view_mode_radio")
 mode_index = T["modes"].index(view_mode_choice)
 
-# --- ၅။ Weather API ---
+# --- ၅။ Weather API (Fix: Adding winddirection_10m) ---
 @st.cache_data(ttl=600)
 def fetch_weather(city):
     loc = MYANMAR_CITIES[city]
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
     try:
         r = requests.get(url, timeout=15).json()
-        # Dictionary ကို သေချာပိတ်ထားပါတယ်
         df_h = pd.DataFrame({
             "Time": pd.to_datetime(r['hourly']['time']), 
             "Temp": r['hourly']['temperature_2m'],
             "precipitation": r['hourly']['precipitation'],
             "Wind": r['hourly']['windspeed_10m'],
+            "WindDir": r['hourly']['winddirection_10m'],
             "Vis": [v/1000 for v in r['hourly']['visibility']],
             "Humid": r['hourly']['relative_humidity_2m'],
             "Cloud_Oktas": [round((c/100)*8) for c in r['hourly']['cloud_cover']],
             "Thunderstorm": [min(round((c/3500)*100), 100) if (c is not None and c >= 0) else 0 for c in r['hourly'].get('cape', [])]
         })
-        
-        df_d = pd.DataFrame({
-            "Date": pd.to_datetime(r['daily']['time']), 
-            "Tmax": r['daily']['temperature_2m_max'],
-            "Tmin": r['daily']['temperature_2m_min'], 
-            "Rain": r['daily']['precipitation_sum']
-        })
-        return df_h, df_d
-    except Exception as e:
-        st.error(f"Error: {e}")
-        return None, None
-        
-@st.cache_data(ttl=600)
-def fetch_weather(city):
-    loc = MYANMAR_CITIES[city]
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
-    try:
-        r = requests.get(url, timeout=15).json()
-        # --- ဒီအပိုင်းမှာ အပိတ်ကွင်းတွေကို သေချာကြည့်ပေးပါ ---
-        df_h = pd.DataFrame({
-            "Time": pd.to_datetime(r['hourly']['time']), 
-            "Temp": r['hourly']['temperature_2m'],
-            "precipitation": r['hourly']['precipitation'],
-            "Wind": r['hourly']['windspeed_10m'],
-            "Vis": [v/1000 for v in r['hourly']['visibility']],
-            "Humid": r['hourly']['relative_humidity_2m'],
-            "Cloud_Oktas": [round((c/100)*8) for c in r['hourly']['cloud_cover']],
-            "Thunderstorm": [min(round((c/3500)*100), 100) if (c is not None and c >= 0) else 0 for c in r['hourly'].get('cape', [])]
-        }) # <--- ဒီမှာ DataFrame အပိတ်ကွင်း ပါရပါမယ်
         
         df_d = pd.DataFrame({
             "Date": pd.to_datetime(r['daily']['time']), 
@@ -174,10 +145,18 @@ if df_h is not None and df_d is not None:
         fig2.update_layout(yaxis_title="မိုးရေချိန် (mm)" if lang == "မြန်မာ" else "Rain (mm)")
         st.plotly_chart(fig2, use_container_width=True)
 
-        # 3. Wind Speed
+     # 3. Wind Speed & Direction (Fixed with Arrows)
         st.subheader(T["charts"][2])
-        fig3 = px.line(df_h, x='Time', y='Wind', color_discrete_sequence=['green'])
-        fig3.update_layout(yaxis_title="လေတိုက်နှုန်း (mph)" if lang == "မြန်မာ" else "Wind (mph)")
+        fig3 = go.Figure()
+        fig3.add_trace(go.Scatter(x=df_h['Time'], y=df_h['Wind'], mode='lines', name='Wind Speed', line=dict(color='green', width=2)))
+        
+        if 'WindDir' in df_h.columns:
+            df_arrows = df_h.iloc[::6] 
+            fig3.add_trace(go.Scatter(
+                x=df_arrows['Time'], y=df_arrows['Wind'], mode='markers', name='Direction',
+                marker=dict(symbol='triangle-up', size=12, angle=df_arrows['WindDir'], color='darkgreen')
+            ))
+        fig3.update_layout(yaxis_title="လေတိုက်နှုန်း (mph)" if lang == "မြန်မာ" else "Wind Speed (mph)", showlegend=False)
         st.plotly_chart(fig3, use_container_width=True)
 
         # 4. Visibility
