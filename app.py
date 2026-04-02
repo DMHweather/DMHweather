@@ -152,7 +152,7 @@ if df_h is not None and df_d is not None:
         fig2.update_layout(yaxis_title=y_rain_label)
         st.plotly_chart(fig2, use_container_width=True)
 
-     # 3. Wind Speed & Direction (6-hourly Mean)
+      # 3. Wind Speed & Direction (6-hourly Mean)
         st.subheader(T["charts"][2] + " (6-hourly)")
         
         # ၆ နာရီခြား ပျှမ်းမျှ တွက်ချက်ခြင်း
