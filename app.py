@@ -183,9 +183,9 @@ if df_h is not None:
             today_max = df_d.iloc[0]['Tmax']
             
             # Risk Logic
-            if today_max >= 40: lvl, color, bg = 0, "white", "#FF0000" # အနီ
-            elif today_max >= 37: lvl, color, bg = 1, "black", "#FFA500" # လိမ္မော်
-            elif today_max >= 34: lvl, color, bg = 2, "black", "#FFFF00" # အဝါ
+            if today_max >= 42: lvl, color, bg = 0, "white", "#FF0000" # အနီ
+            elif today_max >= 40: lvl, color, bg = 1, "black", "#FFA500" # လိမ္မော်
+            elif today_max >= 38: lvl, color, bg = 2, "black", "#FFFF00" # အဝါ
             else: lvl, color, bg = 3, "white", "#008000" # အစိမ်း
 
             # Risk Indicator UI
