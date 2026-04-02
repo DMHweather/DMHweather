@@ -139,10 +139,17 @@ if df_h is not None and df_d is not None:
         fig1.update_layout(yaxis_title="အပူချိန် (°C)" if lang == "မြန်မာ" else "Temp (°C)")
         st.plotly_chart(fig1, use_container_width=True)
 
-        # 2. Rainfall
-        st.subheader(T["charts"][1])
-        fig2 = px.bar(df_d, x='Date', y='Rain', color_discrete_sequence=['skyblue'])
-        fig2.update_layout(yaxis_title="မိုးရေချိန် (mm)" if lang == "မြန်မာ" else "Rain (mm)")
+        # 2. Rainfall (6-hourly Accumulated)
+        st.subheader(T["charts"][1] + " (6-hourly)")
+        
+        # Hourly data ကို ၆ နာရီခြား စုပေါင်း (Sum) တွက်ချက်ခြင်း
+        df_6h_rain = df_h.set_index('Time').resample('6h')['precipitation'].sum().reset_index()
+        
+        fig2 = px.bar(df_6h_rain, x='Time', y='precipitation', color_discrete_sequence=['skyblue'])
+        
+        # Y-axis title ကို 6-hourly လို့ ထပ်ဖြည့်ပေးထားပါတယ်
+        y_rain_label = "မိုးရေချိန် (6-hr mm)" if lang == "မြန်မာ" else "6-hr Rain (mm)"
+        fig2.update_layout(yaxis_title=y_rain_label)
         st.plotly_chart(fig2, use_container_width=True)
 
      # 3. Wind Speed & Direction (Fixed with Arrows)
