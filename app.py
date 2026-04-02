@@ -55,7 +55,7 @@ LANG_DATA = {
         "view_mode_label": "📊 View Mode",
         "modes": ["16-Days Forecast", "Heatwave Monitoring (IBF)", "Climate Change Projection SSP5-8.5"],
         "dmh_alert":  "📢 Tip: Follow DMH news for the latest weather updates.",
-        "storm_note": "📝 Note: Beware of lightning if > 60%.",
+        "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
         "ibf_header": "🏥 Health Impacts & Recommendations",
         "risk_levels": ["Extreme Risk", "High Risk", "Moderate Risk", "Low Risk"],
         "charts": ["🌡️ 1. Temperature(°C)", "🌧️ 2. Precipitation(mm) 6 hourly", "💨 3. Wind Speed (mph) & Direction", "🔭 4. Visibility (km)", "💧 5. Humidity (%)", "☁️ 6. Cloud Cover (Oktas: 0-8)", "⚡ 7. Thunderstorm & Lightning Probability (%)"],
