@@ -152,20 +152,25 @@ if df_h is not None and df_d is not None:
         fig2.update_layout(yaxis_title=y_rain_label)
         st.plotly_chart(fig2, use_container_width=True)
 
-     # 3. Wind Speed & Direction (Fixed with Arrows)
-        st.subheader(T["charts"][2])
-        fig3 = go.Figure()
-        fig3.add_trace(go.Scatter(x=df_h['Time'], y=df_h['Wind'], mode='lines', name='Wind Speed', line=dict(color='red', width=2)))
+     # 3. Wind Speed & Direction (6-hourly Mean)
+        st.subheader(T["charts"][2] + " (6-hourly)")
         
-        if 'WindDir' in df_h.columns:
-            df_arrows = df_h.iloc[::6] 
-            fig3.add_trace(go.Scatter(
-                x=df_arrows['Time'], y=df_arrows['Wind'], mode='markers', name='Direction',
-                marker=dict(symbol='triangle-up', size=12, angle=df_arrows['WindDir'], color='darkgreen')
-            ))
-        fig3.update_layout(yaxis_title="လေတိုက်နှုန်း (mph)" if lang == "မြန်မာ" else "Wind Speed (mph)", showlegend=False)
+        # ၆ နာရီခြား ပျှမ်းမျှ တွက်ချက်ခြင်း
+        df_6h_wind = df_h.set_index('Time').resample('6h').agg({'Wind':'mean', 'WindDir':'mean'}).reset_index()
+        
+        fig3 = go.Figure()
+        fig3.add_trace(go.Scatter(x=df_6h_wind['Time'], y=df_6h_wind['Wind'], mode='lines+markers', name='Wind Speed', line=dict(color='green', width=2)))
+        
+        # Arrow Markers
+        fig3.add_trace(go.Scatter(
+            x=df_6h_wind['Time'], y=df_6h_wind['Wind'], mode='markers', name='Direction',
+            marker=dict(symbol='triangle-up', size=12, angle=df_6h_wind['WindDir'], color='darkgreen')
+        ))
+        
+        y_wind_label = "လေတိုက်နှုန်း (6-hr Avg mph)" if lang == "မြန်မာ" else "6-hr Avg Wind (mph)"
+        fig3.update_layout(yaxis_title=y_wind_label, showlegend=False)
         st.plotly_chart(fig3, use_container_width=True)
-
+        
         # 4. Visibility
         st.subheader(T["charts"][3])
         fig4 = px.line(df_h, x='Time', y='Vis', color_discrete_sequence=['gray'])
@@ -178,24 +183,31 @@ if df_h is not None and df_d is not None:
         fig5.update_layout(yaxis_title="စိုထိုင်းဆ (%)" if lang == "မြန်မာ" else "Humidity (%)")
         st.plotly_chart(px.area(df_h, x='Time', y='Humid', title=T["charts"][4]), use_container_width=True)
 
-        # 6. Cloud Cover
-        st.subheader(T["charts"][5])
-        fig6 = px.bar(df_h, x='Time', y='Cloud_Oktas', color_discrete_sequence=['lightgreen'])
-        fig6.update_layout(yaxis_title="တိမ်ဖုံးမှု (Oktas)" if lang == "မြန်မာ" else "Cloud (Oktas)")
+        
+       # 6. Cloud Cover (6-hourly Max)
+        st.subheader(T["charts"][5] + " (6-hourly)")
+        
+        # ၆ နာရီအတွင်း အများဆုံး တိမ်ဖုံးမှုကို ယူခြင်း
+        df_6h_cloud = df_h.set_index('Time').resample('6h')['Cloud_Oktas'].max().reset_index()
+        
+        fig6 = px.bar(df_6h_cloud, x='Time', y='Cloud_Oktas', color_discrete_sequence=['lightgreen'])
+        y_cloud_label = "တိမ်ဖုံးမှု (6-hr Max Oktas)" if lang == "မြန်မာ" else "6-hr Max Cloud (Oktas)"
+        fig6.update_layout(yaxis_title=y_cloud_label)
         st.plotly_chart(fig6, use_container_width=True)
 
-        # 7. Thunderstorm Prob
-        st.subheader(T["charts"][6])
+       # 7. Thunderstorm Prob (6-hourly Max)
+        st.subheader(T["charts"][6] + " (6-hourly)")
         st.error(T["storm_note"])
         
-        # Column ရှိမရှိ စစ်ဆေးပြီးမှ ဂရပ်ဆွဲပါ
         if 'Thunderstorm' in df_h.columns:
-            fig7 = px.bar(df_h, x='Time', y='Thunderstorm', color_discrete_sequence=['orange'])
-            y_title = "မိုးတိမ်တောင်ဖြစ်နိုင်ခြေ (%)" if lang == "မြန်မာ" else "Thunderstorm Prob (%)"
-            fig7.update_layout(yaxis_title=y_title)
+            # ၆ နာရီအတွင်း အမြင့်ဆုံးဖြစ်နိုင်ခြေကို ယူခြင်း
+            df_6h_storm = df_h.set_index('Time').resample('6h')['Thunderstorm'].max().reset_index()
+            
+            fig7 = px.bar(df_6h_storm, x='Time', y='Thunderstorm', color_discrete_sequence=['orange'])
+            y_storm_label = "မိုးတိမ်တောင်ဖြစ်နိုင်ခြေ (6-hr Max %)" if lang == "မြန်မာ" else "6-hr Max Thunderstorm (%)"
+            fig7.update_layout(yaxis_title=y_storm_label)
             st.plotly_chart(fig7, use_container_width=True)
-        else:
-            st.warning("Thunderstorm data is currently unavailable.")
+       
         
 
     # --- Mode 1: IBF Health Risk Level ---
