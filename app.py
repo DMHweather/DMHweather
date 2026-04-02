@@ -152,7 +152,7 @@ if df_h is not None:
         st.subheader(T["charts"][3])
         fig4 = px.line(df_h, x='Time', y='Vis', color_discrete_sequence=['gray'])
         fig4.update_layout(
-            yaxis_title="အဝေးမြင်တာ (km)" if lang == "မြန်မာ" else "Vis (km)",
+            yaxis_title="အဝေးမြင်တာ (km)" if lang == "မြန်မာ" else "Visibility (km)",
             xaxis_title="အချိန် (Time)"
         )
         st.plotly_chart(fig4, use_container_width=True)
