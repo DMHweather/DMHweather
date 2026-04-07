@@ -137,7 +137,7 @@ if df_h is not None:
         st.warning(T["dmh_alert"])
         # Temp Chart
         st.subheader(T["charts"][0])
-        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), line=dict(color='darkgreen, use_container_width=True)
+        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
 
         # Resampling 6h
         df_6h = df_h.set_index('Time').resample('6h').agg({
