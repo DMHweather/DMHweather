@@ -50,7 +50,7 @@ LANG_DATA = {
         ]
     },
     "English": {
-        "title": "DMH AI Weather System",
+        "title": "DMH AI Weather Forecast System",
         "station_label": "🎯 Select Station",
         "view_mode_label": "📊 View Mode",
         "modes": ["16-Days Forecast", "Heatwave Monitoring (IBF)", "Climate Change Projection SSP5-8.5"],
