@@ -78,33 +78,41 @@ city_list = sorted(list(MYANMAR_CITIES.keys())) # Export အတွက် ဒီ 
 
 @st.cache_data(ttl=600)
 def fetch_weather(city):
-    if city not in MYANMAR_CITIES: return None, None
+    if city not in MYANMAR_CITIES: 
+        return None, None
+    
     loc = MYANMAR_CITIES[city]
+    
+    # URL ကို အရှေ့မှာ f ခံပြီး variable တွေနဲ့ ချိတ်ဆက်ပါ
     url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
     
-    for _ in range(3): # API Timeout ဖြစ်ရင် ၃ ကြိမ်အထိ ထပ်ကျိုးစားမယ်
-        try:
-            r = requests.get(url, timeout=15).json()
-            df_h = pd.DataFrame({
-                "Time": pd.to_datetime(r['hourly']['time']), 
-                "Temp": r['hourly']['temperature_2m'],
-                "precipitation": r['hourly']['precipitation'],
-                "Wind": r['hourly']['windspeed_10m'],
-                "WindDir": r['hourly']['winddirection_10m'],
-                "Vis": [v/1000 for v in r['hourly']['visibility']],
-                "Humid": r['hourly']['relative_humidity_2m'],
-                "Cloud_Oktas": [round((c/100)*8) for c in r['hourly']['cloud_cover']],
-                "Thunderstorm": [min(round((c/3500)*100), 100) if c else 0 for c in r['hourly'].get('cape', [])]
-            })
-            df_d = pd.DataFrame({
-                "Date": pd.to_datetime(r['daily']['time']), 
-                "Tmax": r['daily']['temperature_2m_max'],
-                "Tmin": r['daily']['temperature_2m_min']
-            })
-            return df_h, df_d
-        except:
-            time.sleep(1)
-    return None, None
+    try:
+        r = requests.get(url, timeout=15)
+        r.raise_for_status() # 403 သို့မဟုတ် အခြား error ရှိပါက သိရှိရန်
+        res = r.json()
+        
+        df_h = pd.DataFrame({
+            "Time": pd.to_datetime(res['hourly']['time']), 
+            "Temp": res['hourly']['temperature_2m'],
+            "precipitation": res['hourly']['precipitation'],
+            "Wind": res['hourly']['windspeed_10m'],
+            "WindDir": res['hourly']['winddirection_10m'],
+            "Vis": [v/1000 for v in res['hourly']['visibility']],
+            "Humid": res['hourly']['relative_humidity_2m'],
+            "Cloud_Oktas": [round((c/100)*8) for c in res['hourly']['cloud_cover']],
+            "Thunderstorm": [min(round((c/3500)*100), 100) if c else 0 for c in res['hourly'].get('cape', [])]
+        })
+        
+        df_d = pd.DataFrame({
+            "Date": pd.to_datetime(res['daily']['time']), 
+            "Tmax": res['daily']['temperature_2m_max'],
+            "Tmin": res['daily']['temperature_2m_min']
+        })
+        return df_h, df_d
+    except Exception as e:
+        # ဘာကြောင့် error တက်လဲဆိုတာ သိရအောင် console မှာ print ထုတ်ကြည့်နိုင်ပါတယ်
+        print(f"Error fetching data: {e}")
+        return None, None
 
 # --- ၄။ Sidebar & UI ---
 st.sidebar.image(dm_header_logo, width=100)
