@@ -97,17 +97,18 @@ def fetch_weather(city):
         r.raise_for_status()
         res = r.json()
         
+        # --- fetch_weather function ထဲက df_h တည်ဆောက်ပုံကို ဒီလိုပြင်ပါ ---
         df_h = pd.DataFrame({
             "Time": pd.to_datetime(res['hourly']['time']), 
             "Temp": res['hourly']['temperature_2m'],
             "precipitation": res['hourly']['precipitation'],
             "Wind": res['hourly']['windspeed_10m'],
             "WindDir": res['hourly']['winddirection_10m'],
-            "Vis": [v/1000 for v in res['hourly']['visibility']],
+            "Vis": [v/1000 if v is not None else 0 for v in res['hourly']['visibility']], # None စစ်ရန်
             "Humid": res['hourly']['relative_humidity_2m'],
-            "Cloud_Oktas": [round((c/100)*8) for c in res['hourly']['cloud_cover']],
-            "Thunderstorm": [min(round((c/3500)*100), 100) if c else 0 for c in res['hourly'].get('cape', [])]
-        })
+            "Cloud_Oktas": [round((c/100)*8) if c is not None else 0 for c in res['hourly']['cloud_cover']], # None စစ်ရန်
+            "Thunderstorm": [min(round((c/3500)*100), 100) if (c is not None and not pd.isna(c)) else 0 for c in res['hourly'].get('cape', [])] # ဒီနေရာက အဓိကပါ
+    })
         
         # --- ပြင်ဆင်ချက်- Index တွက်ချက်မှု ဒီမှာ ထည့်ရပါမယ် (KeyError မတက်အောင်) ---
         df_h['HI'], df_h['WBGT'], df_h['UTCI'] = zip(*df_h.apply(lambda x: calculate_all_indices(x['Temp'], x['Humid']), axis=1))
