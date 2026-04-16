@@ -74,6 +74,8 @@ LANG_DATA = {
 }
 
 # --- ၄။ ဒေတာဖတ်ခြင်းနှင့် API ---
+
+# ဒီအပိုင်းကို မဖျက်ပါနဲ့ (ဒီအတိုင်းထားပါ)
 @st.cache_data
 def load_stations():
     try:
@@ -85,32 +87,35 @@ def load_stations():
 MYANMAR_CITIES = load_stations()
 city_list = sorted(list(MYANMAR_CITIES.keys()))
 
-@st.cache_data(ttl=600)
+# ဒီနေရာမှာ ttl=3600 ပြောင်းပြီး fetch_weather ကို အခုလိုပြင်ပါ
+@st.cache_data(ttl=3600)
 def fetch_weather(city):
     if city not in MYANMAR_CITIES: 
         return None, None
     loc = MYANMAR_CITIES[city]
+    
+    # URL တည်ဆောက်ခြင်း
     url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
     
     try:
-        r = requests.get(url, timeout=15)
-        r.raise_for_status()
+        # API ကို လှမ်းခေါ်ပြီး Error စစ်ဆေးခြင်း
+        r = requests.get(url, timeout=30)
+        r.raise_for_status() # 429 error သို့မဟုတ် တခြား error ရှိရင် သိအောင်လုပ်ပေးတယ်
         res = r.json()
         
-        # --- fetch_weather function ထဲက df_h တည်ဆောက်ပုံကို ဒီလိုပြင်ပါ ---
+        # --- ဒေတာများကို DataFrame ထဲထည့်ခြင်း (သင့် code အတိုင်းပါပဲ) ---
         df_h = pd.DataFrame({
             "Time": pd.to_datetime(res['hourly']['time']), 
             "Temp": res['hourly']['temperature_2m'],
             "precipitation": res['hourly']['precipitation'],
             "Wind": res['hourly']['windspeed_10m'],
             "WindDir": res['hourly']['winddirection_10m'],
-            "Vis": [v/1000 if v is not None else 0 for v in res['hourly']['visibility']], # None စစ်ရန်
+            "Vis": [v/1000 if v is not None else 0 for v in res['hourly']['visibility']],
             "Humid": res['hourly']['relative_humidity_2m'],
-            "Cloud_Oktas": [round((c/100)*8) if c is not None else 0 for c in res['hourly']['cloud_cover']], # None စစ်ရန်
-            "Thunderstorm": [min(round((c/3500)*100), 100) if (c is not None and not pd.isna(c)) else 0 for c in res['hourly'].get('cape', [])] # ဒီနေရာက အဓိကပါ
-    })
+            "Cloud_Oktas": [round((c/100)*8) if c is not None else 0 for c in res['hourly']['cloud_cover']],
+            "Thunderstorm": [min(round((c/3500)*100), 100) if (c is not None and not pd.isna(c)) else 0 for c in res['hourly'].get('cape', [])]
+        })
         
-        # --- ပြင်ဆင်ချက်- Index တွက်ချက်မှု ဒီမှာ ထည့်ရပါမယ် (KeyError မတက်အောင်) ---
         df_h['HI'], df_h['WBGT'], df_h['UTCI'] = zip(*df_h.apply(lambda x: calculate_all_indices(x['Temp'], x['Humid']), axis=1))
 
         df_d = pd.DataFrame({
@@ -119,7 +124,8 @@ def fetch_weather(city):
             "Tmin": res['daily']['temperature_2m_min']
         })
         return df_h, df_d
-   except Exception as e:
+
+    except Exception as e:
         # 429 Error တက်ရင် User ကို သတိပေးမယ်
         if "429" in str(e):
             st.error("⚠️ API Limit ပြည့်သွားပါပြီ။ ၁ မိနစ်ခန့် စောင့်ပေးပါ။")
