@@ -119,8 +119,12 @@ def fetch_weather(city):
             "Tmin": res['daily']['temperature_2m_min']
         })
         return df_h, df_d
-    except Exception as e:
-        st.error(f"Error fetching data: {e}")
+   except Exception as e:
+        # 429 Error တက်ရင် User ကို သတိပေးမယ်
+        if "429" in str(e):
+            st.error("⚠️ API Limit ပြည့်သွားပါပြီ။ ၁ မိနစ်ခန့် စောင့်ပေးပါ။")
+        else:
+            st.error(f"Error fetching data: {e}")
         return None, None
 
 # --- ၅။ Sidebar & UI ---
