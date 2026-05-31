@@ -103,6 +103,38 @@ def load_stations():
 
 MYANMAR_CITIES = load_stations()
 city_list = sorted(list(MYANMAR_CITIES.keys()))
+# Mode 4 (နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ) ဆိုရင် ရှာဖွေရေး Input Box ပြပေးမယ်
+if mode_index == 4:
+    search_type = st.sidebar.radio("🔍 ရှာဖွေမည့်ပုံစံ ရွေးချယ်ပါ", ["မြို့အမည်ဖြင့် ရှာရန် (AccuWeather စတိုင်)", "Lat / Lon ကိုယ်တိုင်ရိုက်ထည့်ရန်"])
+    
+    if search_type == "မြို့အမည်ဖြင့် ရှာရန် (AccuWeather စတိုင်)":
+        search_query = st.sidebar.text_input("🏙️ မြို့အမည် ရိုက်ထည့်ပါ (ဥပမာ - Tokyo, Paris, Singapore)", "Singapore")
+        
+        # Geocoding API သုံးပြီး မြို့ရဲ့ Lat/Lon ကို အလိုအလျောက် ရှာဖွေခြင်း
+        with st.spinner("မြို့တည်နေရာ ရှာဖွေနေပါသည်..."):
+            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={search_query}&count=1&language=en&format=json"
+            try:
+                geo_res = requests.get(geo_url).json()
+                if "results" in geo_res and len(geo_res["results"]) > 0:
+                    result = geo_res["results"][0]
+                    selected_city = f"{result['name']} ({result.get('country', '')})"
+                    active_dict = {selected_city: {"lat": result["latitude"], "lon": result["longitude"], "tz": result.get("timezone", "Asia/Yangon")}}
+                else:
+                    st.sidebar.error("❌ မြို့အမည် ရှာမတွေ့ပါ။ စာလုံးပေါင်း ပြန်စစ်ပေးပါ။")
+                    selected_city = "Singapore"
+                    active_dict = {"Singapore": {"lat": 1.3521, "lon": 103.8198, "tz": "Asia/Singapore"}}
+            except:
+                selected_city = "Singapore"
+                active_dict = {"Singapore": {"lat": 1.3521, "lon": 103.8198, "tz": "Asia/Singapore"}}
+                
+    else: # Lat/Lon ကိုယ်တိုင်ရိုက်ထည့်မည့်စနစ်
+        c_lat = st.sidebar.number_input("📍 Latitude (မြောက်လတ္တီတွဒ်)", value=19.763, format="%.4f")
+        c_lon = st.sidebar.number_input("📍 Longitude (အရှေ့လောင်ဂျီတွဒ်)", value=96.078, format="%.4f")
+        selected_city = f"Custom Location ({c_lat}, {c_lon})"
+        active_dict = {selected_city: {"lat": c_lat, "lon": c_lon, "tz": "Asia/Yangon"}}
+else:
+    selected_city = st.sidebar.selectbox(T["station_label"], city_list)
+    active_dict = MYANMAR_CITIES
 
 # ပြည်ပမြို့များအတွက်ပါ သုံးနိုင်အောင် တည်နေရာဒေတာ dictionary ကို parameter အနေနဲ့ လက်ခံရန် ပြင်ဆင်ခြင်း
 @st.cache_data(ttl=3600)
@@ -156,6 +188,19 @@ bias = st.sidebar.slider("🌡️ Bias Correction (°C)", -5.0, 5.0, 0.0)
 
 view_mode_choice = st.sidebar.radio(T["view_mode_label"], T["modes"])
 mode_index = T["modes"].index(view_mode_choice)
+# ==========================================
+    # ✨ နေရာအသစ် - Mode 4: နိုင်ငံတကာမြို့များနှင့် Custom Lat/Lon ခန့်မှန်းချက်
+    # ==========================================
+    elif mode_index == 4:
+        st.subheader("🌏 Global Weather Search & Custom Coordinates (Icon Style)")
+        st.success(f"လက်ရှိပြသနေသော တည်နေရာ - {selected_city}")
+        
+        # Lat/Lon အချက်အလက်ကို မြေပုံအသေးလေးနဲ့ ပြပေးခြင်း (User အတွက် ပိုမိုကြည့်ကောင်းစေရန်)
+        map_df = pd.DataFrame([{"lat": active_dict[selected_city]["lat"], "lon": active_dict[selected_city]["lon"]}])
+        st.map(map_df, zoom=10, size=20)
+        
+        # ၃ နာရီခြား Icon Graph နှင့် ဇယားကို Render လုပ်ပေးခြင်း
+        render_icon_style_forecast(df_h)
 
 # Mode 4 (အိမ်နီးချင်း) ဆိုရင် Sidebar မှာ နိုင်ငံခြားမြို့တွေပြပြီး ကျန်တာဆိုရင် မြန်မာမြို့တွေပြမယ်
 if mode_index == 4:
