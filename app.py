@@ -35,7 +35,8 @@ LANG_DATA = {
         "title": "DMH AI မိုးလေဝသခန့်မှန်းစနစ်",
         "station_label": "🎯 စခန်းအမည်ရွေးချယ်ပါ",
         "view_mode_label": "📊 View Mode",
-        "modes": ["၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)"], "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
+        "modes": ["၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)","၃ နာရီတစ်ကြိမ်မြို့ကြီးများခန့်မှန်းချက်"], 
+        "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
         "storm_note": "📝 မှတ်ချက်: မိုးတိမ်တောင် ဖြစ်နိုင်ခြေ ၆၀% ထက်ကျော်လွန်ပါက လေပြင်းတိုက်ခတ်ခြင်း၊ မိုးကြိုးပစ်ခြင်းနှင့် လျှပ်စီးလက်ခြင်းများ  နာရီတစ်ကြိမ်မြိုအလိုက်ခန့်မှန်းချက် ဖြစ်ပေါ်နိုင်သဖြင့် ဂရုပြုရန် လိုအပ်ပါသည်။",
         "ibf_header": "🏥 ကျန်းမာရေးကဏ္ဍဆိုင်ရာ အကျိုးသက်ရောက်မှုနှင့် အကြံပြုချက်များ",
         "risk_levels": ["Extreme Risk (အလွန်အန္တရာယ်ရှိ)", "High Risk (အန္တရာယ်ရှိ)", "Moderate Risk (သတိပြုရန်)", "Low Risk (ပုံမှန်)"],
@@ -62,7 +63,7 @@ LANG_DATA = {
         "title": "DMH AI Weather Forecast System",
         "station_label": "🎯 Select Station",
         "view_mode_label": "📊 View Mode",
-        "modes": ["16-Days Forecast", "Heatwave Monitoring (IBF)", "Climate Change Projection SSP5-8.5"],3-Hourly Fprecast
+        "modes": ["16-Days Forecast", "Heatwave Monitoring (IBF)", "Climate Change Projection SSP5-8.5","3-Hourly Fprecast"],
         "dmh_alert":  "📢 Tip: Follow DMH news for the latest weather updates.",
         "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
         "ibf_header": "🏥 Health Impacts & Recommendations",
