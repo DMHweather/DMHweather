@@ -24,18 +24,7 @@ def calculate_all_indices(temp_c, rh):
     utci = temp_c + (0.33 * e) - (0.7 * 0.1) - 4.0
     return round(hi, 1), round(wbgt, 1), round(utci, 1)
 
-# --- အိမ်နီးချင်းနိုင်ငံများမှ မြို့ကြီးများ၏ တည်နေရာဒေတာ (Lat / Lon) ---
-NEIGHBOUR_CITIES = {
-    "Bangkok (Thailand)": {"lat": 13.7563, "lon": 100.5018, "tz": "Asia/Bangkok"},
-    "Chiang Mai (Thailand)": {"lat": 18.7883, "lon": 98.9853, "tz": "Asia/Bangkok"},
-    "New Delhi (India)": {"lat": 28.6139, "lon": 77.2090, "tz": "Asia/Kolkata"},
-    "Kolkata (India)": {"lat": 22.5726, "lon": 88.3639, "tz": "Asia/Kolkata"},
-    "Kunming (China)": {"lat": 25.0389, "lon": 102.7183, "tz": "Asia/Shanghai"},
-    "Dhaka (Bangladesh)": {"lat": 23.8103, "lon": 90.4125, "tz": "Asia/Dhaka"},
-    "Vientiane (Laos)": {"lat": 17.9757, "lon": 102.6331, "tz": "Asia/Vientiane"}
-}
-
-# --- ၃။ ဘာသာစကားနှင့် စာသားများ (Mode 4 ထပ်တိုးထားပါသည်) ---
+# --- ၃။ ဘာသာစကားနှင့် စာသားများ ---
 LANG_DATA = {
     "မြန်မာ": {
         "title": "DMH AI မိုးလေဝသခန့်မှန်းစနစ်",
@@ -44,9 +33,9 @@ LANG_DATA = {
         "modes": [
             "၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", 
             "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", 
-            "ရာသီဥတုပြောင်းလဲမှု (၂၁۰۰-SSP5-8.5)",
+            "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)",
             "Icon Style ခန့်မှန်းချက်",
-            "အိမ်နီးချင်းနိုင်ငံများ ခန့်မှန်းချက်" # <--- Mode အသစ်
+            "နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ ရှာဖွေရန်"
         ], 
         "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
         "storm_note": "📝 မှတ်ချက်: မိုးတိမ်တောင် ဖြစ်နိုင်ခြေ ၆၀% ထက်ကျော်လွန်ပါက လေပြင်းတိုက်ခတ်ခြင်း၊ မိုးကြိုးပစ်ခြင်းနှင့် လျှပ်စီးလက်ခြင်းများ ဖြစ်ပေါ်နိုင်သဖြင့် ဂရုပြုရန် လိုအပ်ပါသည်။",
@@ -71,7 +60,7 @@ LANG_DATA = {
             "ပုံမှန်အတိုင်း နေနိုင်ပါသည်။ ရေဓာတ်ဖြည့်တင်းရန်နှင့် မိုးဇလခန့်မှန်းချက်များနှင့် သတင်းများကို နားထောင်ပါ။", 
         ]
     },
-     "English": {
+    "English": {
         "title": "DMH AI Weather Forecast System",
         "station_label": "🎯 Select Station",
         "view_mode_label": "📊 View Mode",
@@ -80,7 +69,7 @@ LANG_DATA = {
             "Heatwave Monitoring (IBF)", 
             "Climate Change Projection SSP5-8.5",
             "Icon Style Forecast",
-            "Neighboring Countries Forecast" # <--- Mode အသစ်
+            "Global & Custom Coordinates Search"
         ],
         "dmh_alert":  "📢 Tip: Follow DMH news for the latest weather updates.",
         "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
@@ -92,7 +81,7 @@ LANG_DATA = {
     }
 }
 
-# --- ၄။ ဒေတာဖတ်ခြင်းနှင့် API ---
+# --- ၄။ ဒေတာဖတ်ခြင်းနှင့် API Functions ---
 @st.cache_data
 def load_stations():
     try:
@@ -103,47 +92,13 @@ def load_stations():
 
 MYANMAR_CITIES = load_stations()
 city_list = sorted(list(MYANMAR_CITIES.keys()))
-# Mode 4 (နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ) ဆိုရင် ရှာဖွေရေး Input Box ပြပေးမယ်
-if mode_index == 4:
-    search_type = st.sidebar.radio("🔍 ရှာဖွေမည့်ပုံစံ ရွေးချယ်ပါ", ["မြို့အမည်ဖြင့် ရှာရန် (AccuWeather စတိုင်)", "Lat / Lon ကိုယ်တိုင်ရိုက်ထည့်ရန်"])
-    
-    if search_type == "မြို့အမည်ဖြင့် ရှာရန် (AccuWeather စတိုင်)":
-        search_query = st.sidebar.text_input("🏙️ မြို့အမည် ရိုက်ထည့်ပါ (ဥပမာ - Tokyo, Paris, Singapore)", "Singapore")
-        
-        # Geocoding API သုံးပြီး မြို့ရဲ့ Lat/Lon ကို အလိုအလျောက် ရှာဖွေခြင်း
-        with st.spinner("မြို့တည်နေရာ ရှာဖွေနေပါသည်..."):
-            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={search_query}&count=1&language=en&format=json"
-            try:
-                geo_res = requests.get(geo_url).json()
-                if "results" in geo_res and len(geo_res["results"]) > 0:
-                    result = geo_res["results"][0]
-                    selected_city = f"{result['name']} ({result.get('country', '')})"
-                    active_dict = {selected_city: {"lat": result["latitude"], "lon": result["longitude"], "tz": result.get("timezone", "Asia/Yangon")}}
-                else:
-                    st.sidebar.error("❌ မြို့အမည် ရှာမတွေ့ပါ။ စာလုံးပေါင်း ပြန်စစ်ပေးပါ။")
-                    selected_city = "Singapore"
-                    active_dict = {"Singapore": {"lat": 1.3521, "lon": 103.8198, "tz": "Asia/Singapore"}}
-            except:
-                selected_city = "Singapore"
-                active_dict = {"Singapore": {"lat": 1.3521, "lon": 103.8198, "tz": "Asia/Singapore"}}
-                
-    else: # Lat/Lon ကိုယ်တိုင်ရိုက်ထည့်မည့်စနစ်
-        c_lat = st.sidebar.number_input("📍 Latitude (မြောက်လတ္တီတွဒ်)", value=19.763, format="%.4f")
-        c_lon = st.sidebar.number_input("📍 Longitude (အရှေ့လောင်ဂျီတွဒ်)", value=96.078, format="%.4f")
-        selected_city = f"Custom Location ({c_lat}, {c_lon})"
-        active_dict = {selected_city: {"lat": c_lat, "lon": c_lon, "tz": "Asia/Yangon"}}
-else:
-    selected_city = st.sidebar.selectbox(T["station_label"], city_list)
-    active_dict = MYANMAR_CITIES
 
-# ပြည်ပမြို့များအတွက်ပါ သုံးနိုင်အောင် တည်နေရာဒေတာ dictionary ကို parameter အနေနဲ့ လက်ခံရန် ပြင်ဆင်ခြင်း
 @st.cache_data(ttl=3600)
 def fetch_weather_generic(city, source_dict):
     if city not in source_dict: 
         return None, None
     loc = source_dict[city]
     
-    # သက်ဆိုင်ရာမြို့ရဲ့ Timezone အလိုက် API ခေါ်ယူခြင်း
     tz_param = loc.get('tz', 'Asia/Yangon').replace('/', '%2F')
     url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone={tz_param}"
     
@@ -180,7 +135,7 @@ def fetch_weather_generic(city, source_dict):
             st.error(f"Error fetching data: {e}")
         return None, None
 
-# --- ၅။ Sidebar & UI ---
+# --- ၅။ Sidebar UI ---
 st.sidebar.image(dm_header_logo, width=100)
 lang = st.sidebar.radio("🌐 Language", ["မြန်မာ", "English"], horizontal=True)
 T = LANG_DATA[lang]
@@ -188,36 +143,51 @@ bias = st.sidebar.slider("🌡️ Bias Correction (°C)", -5.0, 5.0, 0.0)
 
 view_mode_choice = st.sidebar.radio(T["view_mode_label"], T["modes"])
 mode_index = T["modes"].index(view_mode_choice)
-# ==========================================
-    # ✨ နေရာအသစ် - Mode 4: နိုင်ငံတကာမြို့များနှင့် Custom Lat/Lon ခန့်မှန်းချက်
-    # ==========================================
-    elif mode_index == 4:
-        st.subheader("🌏 Global Weather Search & Custom Coordinates (Icon Style)")
-        st.success(f"လက်ရှိပြသနေသော တည်နေရာ - {selected_city}")
-        
-        # Lat/Lon အချက်အလက်ကို မြေပုံအသေးလေးနဲ့ ပြပေးခြင်း (User အတွက် ပိုမိုကြည့်ကောင်းစေရန်)
-        map_df = pd.DataFrame([{"lat": active_dict[selected_city]["lat"], "lon": active_dict[selected_city]["lon"]}])
-        st.map(map_df, zoom=10, size=20)
-        
-        # ၃ နာရီခြား Icon Graph နှင့် ဇယားကို Render လုပ်ပေးခြင်း
-        render_icon_style_forecast(df_h)
 
-# Mode 4 (အိမ်နီးချင်း) ဆိုရင် Sidebar မှာ နိုင်ငံခြားမြို့တွေပြပြီး ကျန်တာဆိုရင် မြန်မာမြို့တွေပြမယ်
+# Global Variables Initializer
+selected_city = ""
+active_dict = {}
+
+# Mode 4: Global & Custom Search Logic
 if mode_index == 4:
-    selected_city = st.sidebar.selectbox("🌏 Select Neighboring City", sorted(list(NEIGHBOUR_CITIES.keys())))
-    active_dict = NEIGHBOUR_CITIES
+    search_type = st.sidebar.radio("🔍 ရှာဖွေမည့်ပုံစံ", ["မြို့အမည်ဖြင့် ရိုက်ရှာရန် (AccuWeather စတိုင်)", "Lat / Lon ကိုယ်တိုင်ရိုက်ထည့်ရန်"])
+    
+    if search_type == "မြို့အမည်ဖြင့် ရိုက်ရှာရန် (AccuWeather စတိုင်)":
+        search_query = st.sidebar.text_input("🏙️ မြို့အမည် ရိုက်ထည့်ပါ (ဥပမာ - Bangkok, Tokyo, Singapore)", "Singapore")
+        
+        with st.spinner("တည်နေရာ ရှာဖွေနေပါသည်..."):
+            geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={search_query}&count=1&language=en&format=json"
+            try:
+                geo_res = requests.get(geo_url).json()
+                if "results" in geo_res and len(geo_res["results"]) > 0:
+                    result = geo_res["results"][0]
+                    selected_city = f"{result['name']} ({result.get('country', '')})"
+                    active_dict = {selected_city: {"lat": result["latitude"], "lon": result["longitude"], "tz": result.get("timezone", "Asia/Yangon")}}
+                else:
+                    st.sidebar.error("❌ မြို့အမည် ရှာမတွေ့ပါ။ စာလုံးပေါင်း ပြန်စစ်ပေးပါ။")
+                    selected_city = "Singapore"
+                    active_dict = {"Singapore": {"lat": 1.3521, "lon": 103.8198, "tz": "Asia/Singapore"}}
+            except:
+                selected_city = "Singapore"
+                active_dict = {"Singapore": {"lat": 1.3521, "lon": 103.8198, "tz": "Asia/Singapore"}}
+                
+    else:
+        c_lat = st.sidebar.number_input("📍 Latitude (မြောက်လတ္တီတွဒ်)", value=13.7563, format="%.4f")
+        c_lon = st.sidebar.number_input("📍 Longitude (အရှေ့လောင်ဂျီတွဒ်)", value=100.5018, format="%.4f")
+        selected_city = f"Custom Location ({c_lat}, {c_lon})"
+        active_dict = {selected_city: {"lat": c_lat, "lon": c_lon, "tz": "Asia/Yangon"}}
 else:
     selected_city = st.sidebar.selectbox(T["station_label"], city_list)
     active_dict = MYANMAR_CITIES
 
+# Main UI Header
 st.title(T["title"])
 st.info(f"📍 {selected_city} | 🕒 {formatted_now}")
 
-# သက်ဆိုင်ရာ မြို့ပြကတ်တလောက်ကနေ ဒေတာဆွဲထုတ်ခြင်း
+# API မှ ဒေတာဆွဲယူခြင်း
 df_h, df_d = fetch_weather_generic(selected_city, active_dict)
 
-# --- ၆။ ဇယားများနှင့် ဂရပ်များဖော်ပြခြင်း Logic ---
-# ဂရပ်ဆွဲပေးမယ့် ဘုံ Function (Mode 3 ကော Mode 4 ကော သုံးလို့ရအောင်)
+# --- ၆။ Graph & Table Render Function ---
 def render_icon_style_forecast(df_hourly):
     df_3h = df_hourly.set_index('Time').resample('3h').agg({
         'Temp': 'first', 'precipitation': 'sum', 'Wind': 'mean', 
@@ -267,13 +237,13 @@ def render_icon_style_forecast(df_hourly):
     df_table.columns = ["Time Slot", "Temperature (°C)", "Precipitation (mm)", "Wind Speed (mph)", "Visibility (km)", "Humidity (%)", "Cloud Cover (Oktas)", "Thunderstorm Prob (%)"]
     st.dataframe(df_table.set_index("Time Slot"), use_container_width=True)
 
-
+# --- ၇။ Main App Modes Display Logic ---
 if df_h is not None:
     df_h['Temp'] += bias
     df_d['Tmax'] += bias
     df_d['Tmin'] += bias
 
-    # --- Mode 0: 16-Days Forecast ---
+    # Mode 0: 16-Days Forecast
     if mode_index == 0:
         st.warning(T["dmh_alert"])
         st.subheader(T["charts"][0])
@@ -308,7 +278,7 @@ if df_h is not None:
         st.error(T["storm_note"])
         st.plotly_chart(px.bar(df_6h, x='Time', y='Thunderstorm', color_discrete_sequence=['orange']), use_container_width=True)
 
-    # --- Mode 1: Heatwave Monitoring ---
+    # Mode 1: Heatwave Monitoring
     elif mode_index == 1:
         st.subheader(T["ibf_header"])
         idx_choice = st.radio("🌡️ Select Heat Stress Index to Monitor", ["အမြင့်ဆုံးအပူချိန်", "Heat Index", "WBGT", "UTCI"], horizontal=True)
@@ -357,7 +327,7 @@ if df_h is not None:
 
         st.plotly_chart(fig_ibf, use_container_width=True)
 
-    # --- Mode 2: Future Climate Projection ---
+    # Mode 2: Future Climate Projection
     elif mode_index == 2:
         st.subheader("🌡️ Future Climate Projection (SSP5-8.5)")
         years = np.arange(2026, 2101)
@@ -365,22 +335,24 @@ if df_h is not None:
         st.plotly_chart(px.line(x=years, y=trend, labels={'x':'Year', 'y':'Temp (°C)'}), use_container_width=True)
         st.warning("⚠️ **Climate Risk Note:** Under the SSP 5-8.5 scenario, Myanmar could face significantly higher frequency of extreme heat and unpredictable monsoon patterns by the end of the century.")
 
-    # --- Mode 3: မြန်မာနိုင်ငံတွင်းစခန်းများ Icon Style ခန့်မှန်းချက် ---
+    # Mode 3: Domestic Icon Style Forecast
     elif mode_index == 3:
         st.subheader("🕒 3-Hourly AccuWeather Style Graph & Forecast (Domestic)")
-        st.info("မြန်မာနိုင်ငံတွင်း ရွေးချယ်ထားသောမြို့၏ ၃ နာရီခြား မိုးလေဝသအခြေအနေပြဂရပ်")
         render_icon_style_forecast(df_h)
 
-    # ==========================================
-    # ✨ နေရာအသစ် - Mode 4: အိမ်နီးချင်းနိုင်ငံများမှ မြို့ကြီးများ ခန့်မှန်းချက် (၃ နာရီခြား Icon Style)
-    # ==========================================
+    # Mode 4: International & Custom Coordinates Forecast
     elif mode_index == 4:
-        st.subheader("🌏 3-Hourly Neighboring Countries Forecast (Icon Style)")
-        st.success(f"မြန်မာ့အိမ်နီးချင်းနိုင်ငံကြီးများ၏ မိုးလေဝသအခြေအနေကို ဆန်းစစ်ခြင်း - {selected_city}")
+        st.subheader("🌏 Global Weather Search & Custom Coordinates (Icon Style)")
+        st.success(f"လက်ရှိပြသနေသော တည်နေရာ - {selected_city}")
+        
+        # Interactive Map Display
+        map_df = pd.DataFrame([{"lat": active_dict[selected_city]["lat"], "lon": active_dict[selected_city]["lon"]}])
+        st.map(map_df, zoom=9, size=22)
+        
+        # Render Graph & Table
         render_icon_style_forecast(df_h)
 
-
-# --- ၇။ Export Report (ပြည်တွင်းစခန်းများအတွက်သာ သီးသန့်အလုပ်လုပ်ရန် ကာကွယ်ထားပါသည်) ---
+# --- ၈။ Export Report (ပြည်တွင်းစခန်းများအတွက်သာ သီးသန့်အလုပ်လုပ်ရန် ကာကွယ်ထားပါသည်) ---
 st.markdown("---")
 if st.button("🚀 Export All Stations Report"):
     all_data = []
