@@ -6,8 +6,6 @@ import plotly.graph_objects as go
 import requests
 from datetime import datetime
 import pytz
-import streamlit as st
-import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
@@ -38,7 +36,7 @@ LANG_DATA = {
         "title": "DMH AI မိုးလေဝသခန့်မှန်းစနစ်",
         "station_label": "🎯 စခန်းအမည်ရွေးချယ်ပါ",
         "view_mode_label": "📊 View Mode",
-        "modes": ["၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)","Icon Style ခန့်မှန်းချက်"], 
+        "modes": ["၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", "ရာသီဥတုပြောင်းလဲမှု (၂၁۰۰-SSP5-8.5)","Icon Style ခန့်မှန်းချက်"], 
         "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
         "storm_note": "📝 မှတ်ချက်: မိုးတိမ်တောင် ဖြစ်နိုင်ခြေ ၆၀% ထက်ကျော်လွန်ပါက လေပြင်းတိုက်ခတ်ခြင်း၊ မိုးကြိုးပစ်ခြင်းနှင့် လျှပ်စီးလက်ခြင်းများ  နာရီတစ်ကြိမ်မြိုအလိုက်ခန့်မှန်းချက် ဖြစ်ပေါ်နိုင်သဖြင့် ဂရုပြုရန် လိုအပ်ပါသည်။",
         "ibf_header": "🏥 ကျန်းမာရေးကဏ္ဍဆိုင်ရာ အကျိုးသက်ရောက်မှုနှင့် အကြံပြုချက်များ",
@@ -66,7 +64,7 @@ LANG_DATA = {
         "title": "DMH AI Weather Forecast System",
         "station_label": "🎯 Select Station",
         "view_mode_label": "📊 View Mode",
-        "modes": ["16-Days Forecast", "Heatwave Monitoring (IBF)", "Climate Change Projection SSP5-8.5","Icon Style Fprecast"],
+        "modes": ["16-Days Forecast", "Heatwave Monitoring (IBF)", "Climate Change Projection SSP5-8.5","Icon Style Forecast"],
         "dmh_alert":  "📢 Tip: Follow DMH news for the latest weather updates.",
         "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
         "ibf_header": "🏥 Health Impacts & Recommendations",
@@ -78,8 +76,6 @@ LANG_DATA = {
 }
 
 # --- ၄။ ဒေတာဖတ်ခြင်းနှင့် API ---
-
-# ဒီအပိုင်းကို မဖျက်ပါနဲ့ (ဒီအတိုင်းထားပါ)
 @st.cache_data
 def load_stations():
     try:
@@ -91,23 +87,19 @@ def load_stations():
 MYANMAR_CITIES = load_stations()
 city_list = sorted(list(MYANMAR_CITIES.keys()))
 
-# ဒီနေရာမှာ ttl=3600 ပြောင်းပြီး fetch_weather ကို အခုလိုပြင်ပါ
 @st.cache_data(ttl=3600)
 def fetch_weather(city):
     if city not in MYANMAR_CITIES: 
         return None, None
     loc = MYANMAR_CITIES[city]
     
-    # URL တည်ဆောက်ခြင်း
     url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone=Asia%2FYangon"
     
     try:
-        # API ကို လှမ်းခေါ်ပြီး Error စစ်ဆေးခြင်း
         r = requests.get(url, timeout=30)
-        r.raise_for_status() # 429 error သို့မဟုတ် တခြား error ရှိရင် သိအောင်လုပ်ပေးတယ်
+        r.raise_for_status()
         res = r.json()
         
-        # --- ဒေတာများကို DataFrame ထဲထည့်ခြင်း (သင့် code အတိုင်းပါပဲ) ---
         df_h = pd.DataFrame({
             "Time": pd.to_datetime(res['hourly']['time']), 
             "Temp": res['hourly']['temperature_2m'],
@@ -130,7 +122,6 @@ def fetch_weather(city):
         return df_h, df_d
 
     except Exception as e:
-        # 429 Error တက်ရင် User ကို သတိပေးမယ်
         if "429" in str(e):
             st.error("⚠️ API Limit ပြည့်သွားပါပြီ။ ၁ မိနစ်ခန့် စောင့်ပေးပါ။")
         else:
@@ -156,6 +147,7 @@ if df_h is not None:
     df_d['Tmax'] += bias
     df_d['Tmin'] += bias
 
+    # --- Mode 0: 16-Days Forecast ---
     if mode_index == 0:
         st.warning(T["dmh_alert"])
         st.subheader(T["charts"][0])
@@ -190,6 +182,7 @@ if df_h is not None:
         st.error(T["storm_note"])
         st.plotly_chart(px.bar(df_6h, x='Time', y='Thunderstorm', color_discrete_sequence=['orange']), use_container_width=True)
 
+    # --- Mode 1: Heatwave Monitoring ---
     elif mode_index == 1:
         st.subheader(T["ibf_header"])
         idx_choice = st.radio("🌡️ Select Heat Stress Index to Monitor", ["အမြင့်ဆုံးအပူချိန်", "Heat Index", "WBGT", "UTCI"], horizontal=True)
@@ -238,12 +231,99 @@ if df_h is not None:
 
         st.plotly_chart(fig_ibf, use_container_width=True)
 
+    # --- Mode 2: Future Climate Projection ---
     elif mode_index == 2:
         st.subheader("🌡️ Future Climate Projection (SSP5-8.5)")
         years = np.arange(2026, 2101)
         trend = [31 + (y-2026)*0.045 + np.random.normal(0, 0.4) for y in years]
         st.plotly_chart(px.line(x=years, y=trend, labels={'x':'Year', 'y':'Temp (°C)'}), use_container_width=True)
         st.warning("⚠️ **Climate Risk Note:** Under the SSP 5-8.5 scenario, Myanmar could face significantly higher frequency of extreme heat and unpredictable monsoon patterns by the end of the century.")
+
+    # ==========================================
+    # ✨ နေရာအသစ် - Mode 3: AccuWeather Icon Style ခန့်မှန်းချက် (၃ နာရီခြား)
+    # ==========================================
+    elif mode_index == 3:
+        st.subheader("🕒 3-Hourly AccuWeather Style Graph & Forecast")
+        st.info("၃ နာရီခြားတစ်ခါ ပြောင်းလဲမည့် မိုးလေဝသ အခြေအနေများကို AccuWeather Style ဖြင့် တွဲဖက်ကြည့်ရှုခြင်း")
+
+        # ၁။ လက်ရှိ hourly data (df_h) ကို ၃ နာရီခြားဖြစ်အောင် Resample လုပ်ပြီး အနီးစပ်ဆုံး ၄၈ နာရီစာ (၁၆ ကြိမ်) ဆွဲထုတ်ခြင်း
+        df_3h = df_h.set_index('Time').resample('3h').agg({
+            'Temp': 'first', 'precipitation': 'sum', 'Wind': 'mean', 
+            'Vis': 'mean', 'Humid': 'mean', 'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
+        }).reset_index().head(16)
+
+        # ၂။ ရာသီဥတုအခြေအနေအလိုက် ပြသမည့် Icon ခွဲခြားသတ်မှတ်ခြင်း Logic
+        icons_list = []
+        for _, row in df_3h.iterrows():
+            if row['precipitation'] > 2.0:
+                icon = "🌧️"  # Rain
+            elif row['Thunderstorm'] > 50:
+                icon = "⚡"  # Thunderstorm
+            elif row['Cloud_Oktas'] >= 5:
+                icon = "☁️"  # Cloudy
+            elif row['Cloud_Oktas'] >= 2:
+                icon = "⛅"  # Partly Cloudy
+            else:
+                # ညဘက် သို့မဟုတ် နေ့ဘက်အလိုက် ခွဲခြားခြင်း
+                hour = row['Time'].hour
+                icon = "🌙" if (hour < 6 or hour > 18) else "☀️"
+            
+            icons_list.append(f"{icon}<br>{round(row['Temp'])}°C")
+
+        # ၃။ Dual Y-Axes Subplot (AccuWeather စတိုင် ဂရပ်) ဖန်တီးခြင်း
+        fig_accu = make_subplots(specs=[[{"secondary_y": True}]])
+
+        # (က) မိုးရေချိန် Bar Chart (အောက်ခြေတိုင်ဂရပ်)
+        fig_accu.add_trace(
+            go.Bar(
+                x=df_3h['Time'].dt.strftime('%b %d\n%I:%M %p'), 
+                y=df_3h['precipitation'], 
+                name="Precipitation (mm)",
+                marker=dict(color='rgba(41, 121, 255, 0.35)', line=dict(color='rgba(41, 121, 255, 0.7)', width=1)),
+                hovertemplate='%{y} mm<extra></extra>'
+            ),
+            secondary_y=True,
+        )
+
+        # (ခ) အပူချိန် Line Chart + Icon Text Labels
+        fig_accu.add_trace(
+            go.Scatter(
+                x=df_3h['Time'].dt.strftime('%b %d\n%I:%M %p'), 
+                y=df_3h['Temp'], 
+                name="Temperature (°C)",
+                mode='lines+markers+text',
+                text=icons_list,
+                textposition="top center",
+                textfont=dict(size=12, color="#333333"),
+                line=dict(color='#FF6D00', width=3, shape='spline'), # Spline curve
+                marker=dict(size=6, color='#FF6D00'),
+                hovertemplate='%{y}°C<extra></extra>'
+            ),
+            secondary_y=False,
+        )
+
+        # ဂရပ် Layout စတိုင်ညှိခြင်း
+        fig_accu.update_layout(
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
+            plot_bgcolor='#F8F9FA',
+            paper_bgcolor='white',
+            height=460,
+            margin=dict(t=50, b=40, l=40, r=40)
+        )
+        fig_accu.update_xaxes(showgrid=True, gridcolor='rgba(220, 220, 220, 0.5)')
+        fig_accu.update_yaxes(title_text="Temperature (°C)", color="#FF6D00", showgrid=True, gridcolor='rgba(220, 220, 220, 0.5)', secondary_y=False)
+        fig_accu.update_yaxes(title_text="Precipitation (mm)", color="#2979FF", showgrid=False, secondary_y=True)
+
+        st.plotly_chart(fig_accu, use_container_width=True)
+
+        # ၄။ ဂရပ်အောက်တွင် Metric ၇ မျိုးလုံးပါဝင်သော အသေးစိတ်ခန့်မှန်းချက်ဇယား (Detailed Table) ပြသခြင်း
+        st.markdown("### 📊 3-Hourly Comprehensive Data Table")
+        df_table = df_3h.copy()
+        df_table['Time'] = df_table['Time'].dt.strftime('%Y-%m-%d %I:%M %p')
+        df_table.columns = ["Time Slot", "Temperature (°C)", "Precipitation (mm)", "Wind Speed (mph)", "Visibility (km)", "Humidity (%)", "Cloud Cover (Oktas)", "Thunderstorm Prob (%)"]
+        st.dataframe(df_table.set_index("Time Slot"), use_container_width=True)
+
 
 # --- ၆။ Export Report ---
 st.markdown("---")
@@ -265,7 +345,7 @@ if st.button("🚀 Export All Stations Report"):
                     'Max_WBGT': day_indices['WBGT'].max(),
                     'Rain_24h': round(rain_24h, 2)
                 })
-        p_bar.progress((i + 1) / len(city_list))
+    p_bar.progress((i + 1) / len(city_list))
     st.session_state['master_df'] = pd.DataFrame(all_data)
 
 if 'master_df' in st.session_state:
