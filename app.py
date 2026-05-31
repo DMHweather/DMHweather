@@ -187,12 +187,19 @@ st.info(f"📍 {selected_city} | 🕒 {formatted_now}")
 # API မှ ဒေတာဆွဲယူခြင်း
 df_h, df_d = fetch_weather_generic(selected_city, active_dict)
 
-# --- ၆။ Graph & Table Render Function ---
+# --- ၆။ Graph & Table Render Function (ရက်ရွေးချယ်ရန် Slider ထည့်သွင်းထားသည်) ---
 def render_icon_style_forecast(df_hourly):
+    # User က ဘယ်နှစ်ရက်စာအထိ ဂရပ်မှာ ကြည့်ချင်လဲဆိုတာ Slider နဲ့ ရွေးချယ်ခိုင်းခြင်း (အမြင့်ဆုံး ၁၆ ရက်၊ Default ၇ ရက်)
+    slider_label = "📅 ခန့်မှန်းချက် ကြည့်ရှုမည့်ရက်ပမာဏ ရွေးချယ်ရန်" if lang == "မြန်မာ" else "📅 Select Forecast Days to Display"
+    display_days = st.slider(slider_label, min_value=1, max_value=16, value=7)
+    
+    # ၁ ရက်လျှင် ၃ နာရီခြား Data Point ၈ ခု ရှိသဖြင့် စုစုပေါင်း ပွိုင့်အရေအတွက် တွက်ချက်ခြင်း
+    total_points = display_days * 8
+
     df_3h = df_hourly.set_index('Time').resample('3h').agg({
         'Temp': 'first', 'precipitation': 'sum', 'Wind': 'mean', 
         'Vis': 'mean', 'Humid': 'mean', 'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
-    }).reset_index().head(16)
+    }).reset_index().head(total_points)
 
     icons_list = []
     for _, row in df_3h.iterrows():
@@ -217,21 +224,22 @@ def render_icon_style_forecast(df_hourly):
         go.Scatter(
             x=df_3h['Time'].dt.strftime('%b %d\n%I:%M %p'), y=df_3h['Temp'], name="Temperature (°C)",
             mode='lines+markers+text', text=icons_list, textposition="top center",
-            textfont=dict(size=12, color="#333333"), line=dict(color='#FF6D00', width=3, shape='spline'),
-            marker=dict(size=6, color='#FF6D00'), hovertemplate='%{y}°C<extra></extra>'
+            textfont=dict(size=11, color="#333333"), line=dict(color='#FF6D00', width=2.5, shape='spline'),
+            marker=dict(size=5, color='#FF6D00'), hovertemplate='%{y}°C<extra></extra>'
         ), secondary_y=False,
     )
     fig_accu.update_layout(
         hovermode="x unified", legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
-        plot_bgcolor='#F8F9FA', paper_bgcolor='white', height=460, margin=dict(t=50, b=40, l=40, r=40)
+        plot_bgcolor='#F8F9FA', paper_bgcolor='white', height=480, margin=dict(t=50, b=40, l=40, r=40)
     )
-    fig_accu.update_xaxes(showgrid=True, gridcolor='rgba(220, 220, 220, 0.5)')
+    fig_accu.update_xaxes(showgrid=True, gridcolor='rgba(220, 220, 220, 0.5)', tickangle=0)
     fig_accu.update_yaxes(title_text="Temperature (°C)", color="#FF6D00", showgrid=True, gridcolor='rgba(220, 220, 220, 0.5)', secondary_y=False)
     fig_accu.update_yaxes(title_text="Precipitation (mm)", color="#2979FF", showgrid=False, secondary_y=True)
 
     st.plotly_chart(fig_accu, use_container_width=True)
 
-    st.markdown("### 📊 3-Hourly Comprehensive Data Table")
+    table_title = f"### 📊 3-Hourly Comprehensive Data Table ({display_days}-Days)"
+    st.markdown(table_title)
     df_table = df_3h.copy()
     df_table['Time'] = df_table['Time'].dt.strftime('%Y-%m-%d %I:%M %p')
     df_table.columns = ["Time Slot", "Temperature (°C)", "Precipitation (mm)", "Wind Speed (mph)", "Visibility (km)", "Humidity (%)", "Cloud Cover (Oktas)", "Thunderstorm Prob (%)"]
@@ -352,28 +360,34 @@ if df_h is not None:
         # Render Graph & Table
         render_icon_style_forecast(df_h)
 
-# --- ၈။ Export Report (ပြည်တွင်းစခန်းများအတွက်သာ သီးသန့်အလုပ်လုပ်ရန် ကာကွယ်ထားပါသည်) ---
+# --- ၈။ Export Report ---
 st.markdown("---")
 if st.button("🚀 Export All Stations Report"):
     all_data = []
     p_bar = st.progress(0)
     for i, city in enumerate(city_list):
         dh, dd = fetch_weather_generic(city, MYANMAR_CITIES)
-        if dh is not None:
+        if dh is not None and dd is not None:
             for d in dd['Date']:
                 t_930 = d + pd.Timedelta(hours=9, minutes=30)
                 y_930 = t_930 - pd.Timedelta(days=1)
                 rain_24h = dh.loc[(dh['Time'] > y_930) & (dh['Time'] <= t_930), 'precipitation'].sum()
                 day_indices = dh[dh['Time'].dt.date == d.date()]
+                
+                # Check to prevent empty data max errors
+                max_hi = day_indices['HI'].max() if not day_indices.empty else np.nan
+                max_wbgt = day_indices['WBGT'].max() if not day_indices.empty else np.nan
+                
                 all_data.append({
                     'Date': d.strftime('%Y-%m-%d'), 'Station': city,
                     'Max_Temp': round(dd.loc[dd['Date'] == d, 'Tmax'].values[0] + bias, 1),
-                    'Max_HeatIndex': day_indices['HI'].max(),
-                    'Max_WBGT': day_indices['WBGT'].max(),
+                    'Max_HeatIndex': max_hi,
+                    'Max_WBGT': max_wbgt,
                     'Rain_24h': round(rain_24h, 2)
                 })
-    p_bar.progress((i + 1) / len(city_list))
-    st.session_state['master_df'] = pd.DataFrame(all_data)
+        p_bar.progress((i + 1) / len(city_list))
+    if all_data:
+        st.session_state['master_df'] = pd.DataFrame(all_data)
 
 if 'master_df' in st.session_state:
     m_df = st.session_state['master_df']
