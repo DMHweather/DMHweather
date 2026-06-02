@@ -434,36 +434,48 @@ elif mode_index == 4:
         with m_col2:
             st.metric(label="လှိုင်းလာရာ အရပ်မျက်နှာ (Dominant Wave Dir)" if lang == "မြန်မာ" else "Dominant Wave Direction", value=f"{latest_dir}°")
             
-        # --- 🌊 WMO Sea State သတ်မှတ်ချက် ၄ ကြောင်းအား အရောင်များဖြင့် ကတ်ပုံစံပြသခြင်း ---
+       # --- 🌊 WMO Sea State သတ်မှတ်ချက် ၄ ကြောင်းအား အရောင်များဖြင့် ကတ်ပုံစံပြသခြင်း (Fix Overflow & Responsive) ---
         st.markdown("### 📋 WMO Sea State လှိုင်းအမြင့်သတ်မှတ်ချက်များနှင့် သတိပေးချက်များ")
         
         c_slight, c_mod, c_rough, c_pheno = st.columns(4)
         with c_slight:
             st.markdown("""
-            <div style='background-color: rgba(40, 167, 69, 0.15); border-left: 5px solid #28a745; padding: 15px; border-radius: 5px; height: 180px;'>
-                <b style='color: #28a745;'>🟢 လှိုင်းအနည်းငယ် (Slight Sea)</b><br>
-                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၀.၅ မီတာမှ ၁.၂၅ မီတာအထိ</b></small><br>
-                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>ပင်လယ်ပြင် ငြိမ်သက်အေးချမ်းသဖြင့် ကမ်းနီး/ကမ်းဝေး ရေကြောင်းသွားလာမှုများနှင့် ရေလုပ်ငန်းများအားလုံး ဘေးကင်းစိတ်ချစွာ လုပ်ကိုင်နိုင်သည်။</p>
+            <div style='background-color: rgba(40, 167, 69, 0.12); border-left: 5px solid #28a745; padding: 12px; border-radius: 6px; min-height: 190px; height: auto; margin-bottom: 10px;'>
+                <b style='color: #28a745; font-size: 1.05em;'>🟢 လှိုင်းအနည်းငယ်<br>(Slight Sea)</b><br>
+                <span style='color: #444; font-size: 0.9em;'>လှိုင်းအမြင့်: <b>၀.၅ မှ ၁.၂၅ မီတာ</b></span><br>
+                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>ပင်လယ်ပြင် ငြိမ်သက်အေးချမ်းသဖြင့် ကမ်းနီး/ကမ်းဝေး ရေကြောင်းသွားလာမှုများနှင့် ရေလုပ်ငန်းများ ဘေးကင်းစိတ်ချစွာ လုပ်ကိုင်နိုင်သည်။</p>
             </div>
             """, unsafe_allow_html=True)
             
         with c_mod:
             st.markdown("""
-            <div style='background-color: rgba(255, 193, 7, 0.15); border-left: 5px solid #ffc107; padding: 15px; border-radius: 5px; height: 180px;'>
-                <b style='color: #d39e00;'>🟡 လှိုင်းအသင့်အတင့် (Moderate)</b><br>
-                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၁.၂၅ မီတာမှ ၂.၅ မီတာအထိ</b></small><br>
-                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>လှိုင်းခေါင်းဖြူများ စတင်တွေ့မြင်ရကာ ကမ်းဝေးငါးဖမ်းရေယာဉ်များနှင့် စက်လှေငယ်များ အထူးသတိပြု သွားလာရမည်။</p>
+            <div style='background-color: rgba(255, 193, 7, 0.12); border-left: 5px solid #ffc107; padding: 12px; border-radius: 6px; min-height: 190px; height: auto; margin-bottom: 10px;'>
+                <b style='color: #b58600; font-size: 1.05em;'>🟡 လှိုင်းအသင့်အတင့်<br>(Moderate Sea)</b><br>
+                <span style='color: #444; font-size: 0.9em;'>လှိုင်းအမြင့်: <b>၁.၂၅ မှ ၂.၅ မီတာ</b></span><br>
+                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>လှိုင်းခေါင်းဖြူများ စတင်တွေ့မြင်ရကာ ကမ်းဝေးငါးဖမ်းရေယာဉ်များနှင့် စက်လှေငယ်များ အထူးသတိပြု သွားလာရမည်။</p>
             </div>
             """, unsafe_allow_html=True)
             
         with c_rough:
             st.markdown("""
-            <div style='background-color: rgba(253, 126, 20, 0.15); border-left: 5px solid #fd7e14; padding: 15px; border-radius: 5px; height: 180px;'>
-                <b style='color: #fd7e14;'>🟠 လှိုင်းကြီးသည် (Rough Sea)</b><br>
-                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၂.၅ မီတာမှ ၄.၀ မီတာအထိ</b></small><br>
-                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>လှိုင်းတံပိုးများ မြင့်မားပြင်းထန်လာသဖြင့် ပင်လယ်ပြင်ခရီးသွားလာမှုများကို အထူးသတိပေးချက် (Advisory Warning) ထုတ်ပြန်ရမည်။</p>
+            <div style='background-color: rgba(253, 126, 20, 0.12); border-left: 5px solid #fd7e14; padding: 12px; border-radius: 6px; min-height: 190px; height: auto; margin-bottom: 10px;'>
+                <b style='color: #fd7e14; font-size: 1.05em;'>🟠 လှိုင်းကြီးသည်<br>(Rough Sea)</b><br>
+                <span style='color: #444; font-size: 0.9em;'>လှိုင်းအမြင့်: <b>၂.၅ မှ ၄.၀ မီတာ</b></span><br>
+                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>လှိုင်းတံပိုးများ မြင့်မားပြင်းထန်လာသဖြင့် ပင်လယ်ပြင်ခရီးသွားလာမှုများကို အထူးသတိပေးချက် (Advisory Warning) ထုတ်ပြန်ရမည်။</p>
             </div>
             """, unsafe_allow_html=True)
+            
+        with c_pheno:
+            st.markdown("""
+            <div style='background-color: rgba(220, 53, 69, 0.12); border-left: 5px solid #dc3545; padding: 12px; border-radius: 6px; min-height: 190px; height: auto; margin-bottom: 10px;'>
+                <b style='color: #dc3545; font-size: 1.05em;'>🔴 လှိုင်းကြီးရာမှ အလွန်ကြီး<br>(Very Rough to Phenomenal)</b><br>
+                <span style='color: #444; font-size: 0.9em;'>လှိုင်းအမြင့်: <b>၄.၀ မီတာနှင့်အထက်</b></span><br>
+                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>မုန်တိုင်းဒဏ်ကြောင့် လှိုင်းလုံးကြီးများ ထကြွသောင်းကျန်းနေသဖြင့် ရေကြောင်းခရီးစဉ်များနှင့် ရေလုပ်ငန်းများ <b>လုံးဝမပြုလုပ်ရန် ဆိုင်းငံ့ရမည်။</b></p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        # ဇယားခေါင်းစဉ်နှင့် ကတ်များကြား အကွာအဝေး သေချာခြားပေးရန် Clearfix ပြုလုပ်ခြင်း
+        st.markdown("<div style='clear: both;'></div><br>", unsafe_allow_html=True)
             
         with c_pheno:
             st.markdown("""
