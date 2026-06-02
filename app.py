@@ -484,7 +484,7 @@ elif mode_index == 4:
 
         st.markdown("<div style='clear: both;'></div><br>", unsafe_allow_html=True)
             
-        # Plotly Graph Generating (Hourly Smooth Chart)
+       # Plotly Graph Generating (Hourly Smooth Chart with 4 WMO Threshold Lines)
         st.subheader("📊 အချိန်အလိုက် လှိုင်းအမြင့် ပြောင်းလဲမှုလှိုင်းဇယား" if lang == "မြန်မာ" else "📊 Hourly Wave Height Trend Chart")
         
         fig_m = px.line(df_marine, x="DateTime", y="Wave Height (m)", 
@@ -492,11 +492,33 @@ elif mode_index == 4:
                         labels={"Wave Height (m)": "လှိုင်းအမြင့် - မီတာ (m)" if lang == "မြန်မာ" else "Wave Height (m)", "DateTime": "နေ့ရက်/အချိန် (Time)"},
                         template="plotly_white")
         
-        # Plotly လိုင်းကို ပိုမိုဝိုင်းဝန်းပြီး ချောမွေ့သွားစေရန် (Smooth Curve ဖြစ်စေရန် spline ပြောင်းခြင်း)
-        fig_m.update_traces(line_shape='spline', line_smoothing=1.3)
+        # လိုင်းကို ပိုမိုဝိုင်းဝန်းပြီး ချောမွေ့သွားစေရန် (Smooth Curve)
+        fig_m.update_traces(line_shape='spline', line_smoothing=1.3, line_color="#1f77b4")
         
-        fig_m.add_hline(y=2.5, line_dash="dash", line_color="orange", annotation_text="Rough Sea (၂.၅ မီတာ)" if lang == "မြန်မာ" else "Rough Sea Threshold")
-        fig_m.add_hline(y=4.0, line_dash="dash", line_color="red", annotation_text="Very Rough (၄.၀ မီတာ)" if lang == "မြန်မာ" else "Very Rough Threshold")
+        # --- WMO Sea State ခွဲခြားချက် Dotted Lines (၄) ကြောင်း ထည့်သွင်းခြင်း ---
+        # ၁။ လှိုင်းအနည်းငယ် သတ်မှတ်ချက် (၀.၅ မီတာ)
+        fig_m.add_hline(y=0.5, line_dash="dot", line_color="#28a745", line_width=1.5,
+                        annotation_text="Slight Sea (၀.၅ မီတာ)" if lang == "မြန်မာ" else "Slight Sea (0.5m)",
+                        annotation_position="top right")
+        
+        # ၂။ လှိုင်းအသင့်အတင့် သတ်မှတ်ချက် (၁.၂၅ မီတာ)
+        fig_m.add_hline(y=1.25, line_dash="dot", line_color="#b58600", line_width=1.5,
+                        annotation_text="Moderate Sea (၁.၂၅ မီတာ)" if lang == "မြန်မာ" else "Moderate Sea (1.25m)",
+                        annotation_position="top right")
+        
+        # ၃။ လှိုင်းကြီးသည် သတ်မှတ်ချက် (၂.၅ မီတာ)
+        fig_m.add_hline(y=2.5, line_dash="dot", line_color="#fd7e14", line_width=1.5,
+                        annotation_text="Rough Sea (၂.၅ မီတာ)" if lang == "မြန်မာ" else "Rough Sea (2.5m)",
+                        annotation_position="top right")
+        
+        # ၄။ လှိုင်းကြီးရာမှ အလွန်ကြီးသည် သတ်မှတ်ချက် (၄.၀ မီတာ)
+        fig_m.add_hline(y=4.0, line_dash="dot", line_color="#dc3545", line_width=1.5,
+                        annotation_text="Very Rough (၄.၀ မီတာ)" if lang == "မြန်မာ" else "Very Rough (4.0m)",
+                        annotation_position="top right")
+        
+        # Y-Axis Range ကို လိုင်းတွေအားလုံး သေချာမြင်ရအောင် 0 မှ 4.5 အထိ ပုံသေညှိပေးခြင်း
+        fig_m.update_yaxes(range=[0, 4.5])
+        
         st.plotly_chart(fig_m, use_container_width=True)
         
         # Marine Data Table View
