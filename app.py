@@ -34,7 +34,7 @@ LANG_DATA = {
             "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", 
             "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)",
             "Icon Style ခန့်မှန်းချက်",
-            "ပင်လယ်ပြင် လှိုင်းအခြေအနေခန့်မှန်းချက် (New)",
+            "ပင်လယ်ပြင် လှိုင်းအခြေအနေခန့်မှန်းချက်",
             "နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ ရှာဖွေရန်",
             "လေထုအရည်အသွေး ခန့်မှန်းချက် (Air Quality)"
         ], 
@@ -72,7 +72,7 @@ LANG_DATA = {
             "Heatwave Monitoring (IBF)", 
             "Climate Change Projection SSP5-8.5",
             "Icon Style Forecast",
-            "Marine Wave Forecast (New)",
+            "Marine Wave Forecast",
             "Global & Custom Coordinates Search",
             "Air Quality Forecast"
         ],
