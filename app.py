@@ -8,7 +8,6 @@ from datetime import datetime
 import pytz
 from plotly.subplots import make_subplots
 
-
 # --- ၁။ Layout Setup ---
 st.set_page_config(page_title="DMH AI Weather Forecast System", layout="wide", page_icon="🌤️")
 mm_tz = pytz.timezone('Asia/Yangon')
@@ -24,19 +23,20 @@ def calculate_all_indices(temp_c, rh):
     utci = temp_c + (0.33 * e) - (0.7 * 0.1) - 4.0
     return round(hi, 1), round(wbgt, 1), round(utci, 1)
 
-# --- ၃။ ဘာသာစကားနှင့် စာသားများ ---
+# --- ၃။ ဘာသာစကားနှင့် စာသားများ (Air Quality အတွက် Mode ၇ ခုမြောက် ထပ်တိုးထားသည်) ---
 LANG_DATA = {
     "မြန်မာ": {
-        "title": "DMH AI မိုးလေဝသခန့်မှန်းစနစ်",
+        "title": "DMH AI မိုးလေဝသခန်းမှန်းစနစ်",
         "station_label": "🎯 စခန်းအမည်ရွေးချယ်ပါ",
         "view_mode_label": "📊 View Mode",
         "modes": [
             "၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", 
             "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", 
-            "ရာသီဥတုပြောင်းလဲမှု (၂၁놓-SSP5-8.5)",
+            "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)",
             "Icon Style ခန့်မှန်းချက်",
             "ပင်လယ်ပြင် လှိုင်းအခြေအနေခန့်မှန်းချက် (New)",
-            "နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ ရှာဖွေရန်"
+            "နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ ရှာဖွေရန်",
+            "လေထုအရည်အသွေး ခန့်မှန်းချက် (Air Quality)"
         ], 
         "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
         "storm_note": "📝 မှတ်ချက်: မိုးတိမ်တောင် ဖြစ်နိုင်ခြေ ၆၀% ထက်ကျော်လွန်ပါက လေပြင်းတိုက်ခတ်ခြင်း၊ မိုးကြိုးပစ်ခြင်းနှင့် လျှပ်စီးလက်ခြင်းများ ဖြစ်ပေါ်နိုင်သဖြင့် ဂရုပြုရန် လိုအပ်ပါသည်။",
@@ -73,7 +73,8 @@ LANG_DATA = {
             "Climate Change Projection SSP5-8.5",
             "Icon Style Forecast",
             "Marine Wave Forecast (New)",
-            "Global & Custom Coordinates Search"
+            "Global & Custom Coordinates Search",
+            "Air Quality Forecast"
         ],
         "dmh_alert":  "📢 Tip: Follow DMH news for the latest weather updates.",
         "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
@@ -99,7 +100,6 @@ def load_stations():
 MYANMAR_CITIES = load_stations()
 city_list = sorted(list(MYANMAR_CITIES.keys()))
 
-# Marine Coastal Stations Database
 MARINE_STATIONS = {
     "ရခိုင်ကမ်းရိုးတန်းဒေသ (Rakhine Coast)": {
         "မောင်တော (Maungdaw)": {"lat": 20.82, "lon": 92.36},
@@ -174,7 +174,6 @@ bias = st.sidebar.slider("🌡️ Bias Correction (°C)", -5.0, 5.0, 0.0)
 view_mode_choice = st.sidebar.radio(T["view_mode_label"], T["modes"])
 mode_index = T["modes"].index(view_mode_choice)
 
-# Global Variables Initializer
 selected_city = ""
 active_dict = {}
 
@@ -184,7 +183,7 @@ if mode_index == 4:  # Marine Wave Forecast Mode
     selected_city = st.sidebar.selectbox(T["marine_station_label"], list(MARINE_STATIONS[selected_region].keys()))
     active_dict = MARINE_STATIONS[selected_region]
 
-elif mode_index == 5:  # Global & Custom Search Logic (Originally Mode 4)
+elif mode_index == 5:  # Global & Custom Search Logic
     search_type = st.sidebar.radio("🔍 ရှာဖွေမည့်ပုံစံ", ["မြို့အမည်ဖြင့် ရိုက်ရှာရန် (AccuWeather စတိုင်)", "Lat / Lon ကိုယ်တိုင်ရိုက်ထည့်ရန်"])
     
     if search_type == "မြို့အမည်ဖြင့် ရိုက်ရှာရန် (AccuWeather စတိုင်)":
@@ -211,6 +210,11 @@ elif mode_index == 5:  # Global & Custom Search Logic (Originally Mode 4)
         c_lon = st.sidebar.number_input("📍 Longitude (အရှေ့လောင်ဂျီတွဒ်)", value=100.5018, format="%.4f")
         selected_city = f"Custom Location ({c_lat}, {c_lon})"
         active_dict = {selected_city: {"lat": c_lat, "lon": c_lon, "tz": "Asia/Yangon"}}
+
+elif mode_index == 6:  # Air Quality Mode (Default to active city selection)
+    selected_city = st.sidebar.selectbox(T["station_label"], city_list)
+    active_dict = MYANMAR_CITIES
+
 else:
     selected_city = st.sidebar.selectbox(T["station_label"], city_list)
     active_dict = MYANMAR_CITIES
@@ -219,13 +223,13 @@ else:
 st.title(T["title"])
 st.info(f"📍 {selected_city} | 🕒 {formatted_now}")
 
-# API မှ ဒေတာဆွဲယူခြင်း (Marine Mode မဟုတ်ပါက ပုံမှန်အတိုင်း Generic API သုံးသည်)
-if mode_index != 4:
+# API Fetching Control Logic
+if mode_index not in [4, 6]:
     df_h, df_d = fetch_weather_generic(selected_city, active_dict)
 else:
-    df_h, df_d = None, None  # Marine Mode မှာ သီးသန့် API သုံးမည် ဖြစ်သောကြောင့် ခေတ္တ None ထားသည်
+    df_h, df_d = None, None 
 
-# --- ၆။ Graph & Table Render Function (ရက်ရွေးချယ်ရန် Slider ထည့်သွင်းထားသည်) ---
+# --- ၆။ Graph & Table Render Function ---
 def render_icon_style_forecast(df_hourly):
     slider_label = "📅 ခန့်မှန်းချက် ကြည့်ရှုမည့်ရက်ပမာဏ ရွေးချယ်ရန်" if lang == "မြန်မာ" else "📅 Select Forecast Days to Display"
     display_days = st.slider(slider_label, min_value=1, max_value=16, value=7)
@@ -384,7 +388,7 @@ elif mode_index == 3:
     st.subheader("🕒 3-Hourly AccuWeather Style Graph & Forecast (Domestic)")
     render_icon_style_forecast(df_h)
 
-# --- NEW MODE 4: Marine Wave Forecast Integration (Hourly & Smooth Chart) ---
+# Mode 4: Marine Wave Forecast Integration
 elif mode_index == 4:
     header_text = "🌊 ၇ ရက်စာ ပင်လယ်ပြင်လှိုင်းအခြေအနေ ခန့်မှန်းချက် (Hourly Marine Forecast)" if lang == "မြန်မာ" else "🌊 7-Day Hourly Marine Wave Forecast"
     st.subheader(header_text)
@@ -392,7 +396,6 @@ elif mode_index == 4:
     lat = active_dict[selected_city]["lat"]
     lon = active_dict[selected_city]["lon"]
     
-    # 7 ရက်စာအတွက် တစ်နာရီချင်းစီအလိုက် (Hourly) ဒေတာကို တောင်းဆိုခြင်း
     marine_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&hourly=wave_height,wave_direction,wave_period&timezone=Asia/Yangon"
     
     try:
@@ -402,7 +405,6 @@ elif mode_index == 4:
             res_marine = r_marine.json()
             hourly_marine = res_marine["hourly"]
             
-            # Hourly DataFrame တည်ဆောက်ခြင်း
             df_marine = pd.DataFrame({
                 "DateTime": pd.to_datetime(hourly_marine["time"]),
                 "Wave Height (m)": hourly_marine["wave_height"],
@@ -410,7 +412,6 @@ elif mode_index == 4:
                 "Wave Period (s)": hourly_marine["wave_period"]
             })
             
-        # WMO Sea State Standard Warning Logic
         def get_wmo_marine_alert(height):
             if pd.isna(height): return "⚪ ဒေတာမရှိပါ"
             if lang == "မြန်မာ":
@@ -424,9 +425,7 @@ elif mode_index == 4:
                 elif 2.5 <= height < 4.0: return "🟠 Rough Sea (Advisory Warning Required)"
                 else: return "🔴 Very Rough/Phenomenal Sea (Suspension of Navigation)"
 
-        # လက်ရှိအချိန်နှင့် အနီးစပ်ဆုံးတူသော ဒေတာကို ယူခြင်း
         now_sgt = pd.Timestamp.now(tz="Asia/Yangon").tz_localize(None)
-        # အချိန်အနီးစပ်ဆုံးတူညီတဲ့ Row ကို ရှာပါ
         idx_closest = (df_marine["DateTime"] - now_sgt).abs().idxmin()
         
         latest_h = df_marine["Wave Height (m)"].iloc[idx_closest]
@@ -435,14 +434,12 @@ elif mode_index == 4:
         
         st.info(f"📍 **{selected_city}** (လက်ရှိခန့်မှန်းခြေအချိန်: {df_marine['DateTime'].iloc[idx_closest].strftime('%Y-%m-%d %H:%M')}) | {marine_status}")
         
-        # Display Metrics
         m_col1, m_col2 = st.columns(2)
         with m_col1:
             st.metric(label="လက်ရှိအချိန် လှိုင်းအမြင့် (Current Wave Height)" if lang == "မြန်မာ" else "Current Wave Height", value=f"{latest_h} m")
         with m_col2:
             st.metric(label="လှိုင်းလာရာ အရပ်မျက်နှာ (Wave Direction)" if lang == "မြန်မာ" else "Wave Direction", value=f"{latest_dir}°")
             
-        # --- 🌊 WMO Sea State သတ်မှတ်ချက် ၄ ကြောင်းအား အရောင်များဖြင့် ကတ်ပုံစံပြသခြင်း ---
         st.markdown("### 📋 WMO Sea State လှိုင်းအမြင့်သတ်မှတ်ချက်များနှင့် သတိပေးချက်များ")
         
         c_slight, c_mod, c_rough, c_pheno = st.columns(4)
@@ -484,7 +481,6 @@ elif mode_index == 4:
 
         st.markdown("<div style='clear: both;'></div><br>", unsafe_allow_html=True)
             
-       # Plotly Graph Generating (Hourly Smooth Chart with 4 WMO Threshold Lines)
         st.subheader("📊 အချိန်အလိုက် လှိုင်းအမြင့် ပြောင်းလဲမှုလှိုင်းဇယား" if lang == "မြန်မာ" else "📊 Hourly Wave Height Trend Chart")
         
         fig_m = px.line(df_marine, x="DateTime", y="Wave Height (m)", 
@@ -492,36 +488,14 @@ elif mode_index == 4:
                         labels={"Wave Height (m)": "လှိုင်းအမြင့် - မီတာ (m)" if lang == "မြန်မာ" else "Wave Height (m)", "DateTime": "နေ့ရက်/အချိန် (Time)"},
                         template="plotly_white")
         
-        # လိုင်းကို ပိုမိုဝိုင်းဝန်းပြီး ချောမွေ့သွားစေရန် (Smooth Curve)
         fig_m.update_traces(line_shape='spline', line_smoothing=1.3, line_color="#1f77b4")
-        
-        # --- WMO Sea State ခွဲခြားချက် Dotted Lines (၄) ကြောင်း ထည့်သွင်းခြင်း ---
-        # ၁။ လှိုင်းအနည်းငယ် သတ်မှတ်ချက် (၀.၅ မီတာ)
-        fig_m.add_hline(y=0.5, line_dash="dot", line_color="#28a745", line_width=1.5,
-                        annotation_text="Slight Sea (၀.၅ မီတာ)" if lang == "မြန်မာ" else "Slight Sea (0.5m)",
-                        annotation_position="top right")
-        
-        # ၂။ လှိုင်းအသင့်အတင့် သတ်မှတ်ချက် (၁.၂၅ မီတာ)
-        fig_m.add_hline(y=1.25, line_dash="dot", line_color="#b58600", line_width=1.5,
-                        annotation_text="Moderate Sea (၁.၂၅ မီတာ)" if lang == "မြန်မာ" else "Moderate Sea (1.25m)",
-                        annotation_position="top right")
-        
-        # ၃။ လှိုင်းကြီးသည် သတ်မှတ်ချက် (၂.၅ မီတာ)
-        fig_m.add_hline(y=2.5, line_dash="dot", line_color="#fd7e14", line_width=1.5,
-                        annotation_text="Rough Sea (၂.၅ မီတာ)" if lang == "မြန်မာ" else "Rough Sea (2.5m)",
-                        annotation_position="top right")
-        
-        # ၄။ လှိုင်းကြီးရာမှ အလွန်ကြီးသည် သတ်မှတ်ချက် (၄.၀ မီတာ)
-        fig_m.add_hline(y=4.0, line_dash="dot", line_color="#dc3545", line_width=1.5,
-                        annotation_text="Very Rough (၄.၀ မီတာ)" if lang == "မြန်မာ" else "Very Rough (4.0m)",
-                        annotation_position="top right")
-        
-        # Y-Axis Range ကို လိုင်းတွေအားလုံး သေချာမြင်ရအောင် 0 မှ 4.5 အထိ ပုံသေညှိပေးခြင်း
+        fig_m.add_hline(y=0.5, line_dash="dot", line_color="#28a745", line_width=1.5, annotation_text="Slight Sea", annotation_position="top right")
+        fig_m.add_hline(y=1.25, line_dash="dot", line_color="#b58600", line_width=1.5, annotation_text="Moderate Sea", annotation_position="top right")
+        fig_m.add_hline(y=2.5, line_dash="dot", line_color="#fd7e14", line_width=1.5, annotation_text="Rough Sea", annotation_position="top right")
+        fig_m.add_hline(y=4.0, line_dash="dot", line_color="#dc3545", line_width=1.5, annotation_text="Very Rough", annotation_position="top right")
         fig_m.update_yaxes(range=[0, 4.5])
-        
         st.plotly_chart(fig_m, use_container_width=True)
         
-        # Marine Data Table View
         with st.expander("📋 အသေးစိတ် ပင်လယ်ပြင် တစ်နာရီချင်းစီအလိုက် ဒေတာဇယား" if lang == "မြန်မာ" else "📋 Detailed Hourly Marine Data Table"):
             df_marine_disp = df_marine.copy()
             df_marine_disp['DateTime'] = df_marine_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
@@ -530,31 +504,30 @@ elif mode_index == 4:
     except Exception as em:
         st.error(f"ပင်လယ်ပြင် API ချိတ်ဆက်မှု အဆင်မပြေပါ - {em}")
 
-# Mode 5: International & Custom Coordinates Forecast (Originally Mode 4)
+# Mode 5: International & Custom Coordinates Forecast
 elif mode_index == 5:
     st.subheader("🌏 Global Weather Search & Custom Coordinates (Icon Style)")
     st.success(f"လက်ရှိပြသနေသော တည်နေရာ - {selected_city}")
     
-    # Interactive Map Display
     map_df = pd.DataFrame([{"lat": active_dict[selected_city]["lat"], "lon": active_dict[selected_city]["lon"]}])
     st.map(map_df, zoom=9, size=22)
     
-    # Render Graph & Table
-    render_icon_style_forecast(df_h)
-    
-    # --- NEW MODE 5: Air Quality Forecast Integration ---
-elif mode_index == 5:
-    header_text = "😷 ၅ ရက်စာ လေထုအရည်အသွေးနှင့် အမှုန်အမွှား ခန့်မှန်းချက် (Air Quality Forecast)" if lang == "မြန်မာ" else "😷 5-Day Air Quality Forecast System"
+    df_global_h, _ = fetch_weather_generic(selected_city, active_dict)
+    if df_global_h is not None:
+        render_icon_style_forecast(df_global_h)
+
+# Mode 6: Air Quality Forecast Integration (ခွဲထုတ်ပြင်ဆင်ပြီး)
+elif mode_index == 6:
+    header_text = "😷 ၅ ရက်စာ လေထုအရည်အသွေးနှင့် အမှုန်အမွှား ခန့်မှန်းချက်" if lang == "မြန်မာ" else "😷 5-Day Air Quality Forecast System"
     st.subheader(header_text)
     
     lat = active_dict[selected_city]["lat"]
     lon = active_dict[selected_city]["lon"]
     
-    # Open-Meteo Air Quality API URL (PM2.5, PM10, O3, NO2 နှင့် European AQI ဒေတာများ တောင်းဆိုခြင်း)
     aq_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,european_aqi&timezone=Asia/Yangon"
     
     try:
-        with st.spinner("လေထုအရည်အသွေး ဒေတာများ တွက်ချက်နေပါသည်..." if lang == "မြန်မာ" else "Analyzing Air Quality Data..."):
+        with st.spinner("လေထုအရည်အသွေး ဒေတာများ တွက်ချက်နေပါသည်..."):
             r_aq = requests.get(aq_url, timeout=30)
             r_aq.raise_for_status()
             res_aq = r_aq.json()
@@ -569,23 +542,21 @@ elif mode_index == 5:
                 "AQI_Index": hourly_aq["european_aqi"]
             })
             
-        # European AQI Standard Text Alert Logic
         def get_aqi_status(aqi):
             if pd.isna(aqi): return "⚪ ဒေတာမရှိပါ"
             if lang == "မြန်မာ":
-                if aqi <= 20: return "🟢 ကောင်းမွန်သည် (Good - ကျန်းမာရေးအတွက် စိတ်ချရပါသည်)"
-                elif aqi <= 40: return "🟡 အသင့်အတင့် (Fair - ထိခိုက်လွယ်သူများ သတိပြုရန်)"
-                elif aqi <= 60: return "🟠 မကျန်းမာနိုင်သော အခြေအနေ (Moderate - အပြင်ထွက်လျှင် Mask တပ်ရန်)"
-                elif aqi <= 80: return "🔴 ကျန်းမာရေး ထိခိုက်နိုင်သည် (Poor - ပြင်းထန်သော ကိုယ်လက်လှုပ်ရှားမှု ရှောင်ရန်)"
-                else: return "🟣 အလွန်အန္တရာယ်ကြီးသည် (Very Poor - အရေးပေါ် အခြေအနေ)"
+                if aqi <= 20: return "🟢 ကောင်းမွန်သည် (Good)"
+                elif aqi <= 40: return "🟡 အသင့်အတင့် (Fair)"
+                elif aqi <= 60: return "🟠 မကျန်းမာနိုင်သော အခြေအနေ (Moderate)"
+                elif aqi <= 80: return "🔴 ကျန်းမာရေး ထိခိုက်နိုင်သည် (Poor)"
+                else: return "🟣 အလွန်အန္တရာယ်ကြီးသည် (Very Poor)"
             else:
-                if aqi <= 20: return "🟢 Good (Safe for all)"
-                elif aqi <= 40: return "🟡 Fair (Sensitive groups should caution)"
-                elif aqi <= 60: return "🟠 Moderate (Wear mask outdoor)"
-                elif aqi <= 80: return "🔴 Poor (Avoid heavy outdoor activities)"
-                else: return "🟣 Very Poor (Health Alert)"
+                if aqi <= 20: return "🟢 Good"
+                elif aqi <= 40: return "🟡 Fair"
+                elif aqi <= 60: return "🟠 Moderate"
+                elif aqi <= 80: return "🔴 Poor"
+                else: return "🟣 Very Poor"
 
-        # လက်ရှိအချိန်နှင့် ကိုက်ညီသော ဒေတာကို ဆွဲထုတ်ခြင်း
         now_sgt = pd.Timestamp.now(tz="Asia/Yangon").tz_localize(None)
         idx_closest = (df_aq["DateTime"] - now_sgt).abs().idxmin()
         
@@ -594,38 +565,30 @@ elif mode_index == 5:
         current_pm10 = df_aq["PM10 (μg/m³)"].iloc[idx_closest]
         
         aqi_status = get_aqi_status(current_aqi)
-        st.info(f"📍 **{selected_city}** (လက်ရှိအချိန် လေထုအခြေအနေ) | {aqi_status}")
+        st.info(f"📍 **{selected_city}** | {aqi_status}")
         
-        # Display Core Metrics
         aq_col1, aq_col2, aq_col3 = st.columns(3)
         with aq_col1:
-            st.metric(label="ဥရောပစံနှုန်း AQI အညွှန်းကိန်း" if lang == "မြန်မာ" else "European AQI Index", value=f"{current_aqi}")
+            st.metric(label="European AQI Index", value=f"{current_aqi}")
         with aq_col2:
-            st.metric(label="PM2.5 အမှုန်အမွှား ပမာဏ" if lang == "မြန်မာ" else "PM2.5 Level", value=f"{current_pm25} μg/m³")
+            st.metric(label="PM2.5 Level", value=f"{current_pm25} μg/m³")
         with aq_col3:
-            st.metric(label="PM10 အမှုန်အမွှား ပမာဏ" if lang == "မြန်မာ" else "PM10 Level", value=f"{current_pm10} μg/m³")
+            st.metric(label="PM10 Level", value=f"{current_pm10} μg/m³")
             
-        # --- 📊 ၅ ရက်စာ အမှုန်အမွှား ပြောင်းလဲမှု ဂရပ်ပုံစံ (Multi-line Smooth Chart) ---
-        st.subheader("📊 ၅ ရက်စာ လေထုညစ်ညမ်းမှု အညွှန်းကိန်း ပြောင်းလဲမှုဇယား" if lang == "မြန်မာ" else "📊 5-Day Air Quality Trend Chart")
-        
-        # ပင်မ အမှုန်အမွှား ၄ မျိုးလုံးကို ဂရပ်တစ်ခုတည်းမှာ နှိုင်းယှဉ်ပြသခြင်း
+        st.subheader("📊 ၅ ရက်စာ လေထုညစ်ညမ်းမှု အညွှန်းကိန်း ပြောင်းလဲမှုဇယား")
         fig_aq = px.line(df_aq, x="DateTime", y=["PM2.5 (μg/m³)", "PM10 (μg/m³)", "Ozone (μg/m³)", "NO2 (μg/m³)"],
-                         title=f"{selected_city} - 5-Day Pollutants Forecast Timeline",
-                         labels={"value": "ပမာဏ - မိုက်ခရိုဂရမ် (μg/m³)" if lang == "မြန်မာ" else "Concentration (μg/m³)", "DateTime": "နေ့ရက်/အချိန်", "variable": "ဓာတ်ငွေ့/အမှုန်"},
+                         title=f"{selected_city} - 5-Day Pollutants Timeline",
                          template="plotly_white")
-        
-        # လိုင်းများကို လှိုင်းတွန့်ပုံစံ ချောမွေ့အောင် ပြုလုပ်ခြင်း
         fig_aq.update_traces(line_shape='spline', line_smoothing=1.2)
         st.plotly_chart(fig_aq, use_container_width=True)
         
-        # Air Quality Data Table View
-        with st.expander("📋 အသေးစိတ် လေထုအရည်အသွေး တစ်နာရီချင်းစီအလိုက် ဒေတာဇယား" if lang == "မြန်မာ" else "📋 Detailed Air Quality Forecast Data"):
+        with st.expander("📋 အသေးစိတ် ဒေတာဇယား"):
             df_aq_disp = df_aq.copy()
             df_aq_disp['DateTime'] = df_aq_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
             st.dataframe(df_aq_disp.set_index("DateTime"), use_container_width=True)
             
     except Exception as e_aq:
-        st.error(f"Air Quality API ချိတ်ဆက်မှု အဆင်မပြေပါ - {e_aq}")
+        st.error(f"Air Quality API Error: {e_aq}")
 # --- ၈။ Export Report ---
 st.markdown("---")
 if st.button("🚀 Export All Stations Report"):
