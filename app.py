@@ -8,6 +8,31 @@ from datetime import datetime
 import pytz
 from plotly.subplots import make_subplots
 
+import streamlit as st
+import pandas as pd
+# အသစ်ဆောက်လိုက်တဲ့ ဖိုင်ထဲက အင်ဂျင်ကို လှမ်းခေါ်ခြင်း
+from verification_engine import DMHForecastVerification
+
+# 1. Sidebar တွင် Page ရွေးချယ်ခွင့် ပြုလုပ်ခြင်း
+st.sidebar.title("DMH Navigation")
+app_mode = st.sidebar.radio("သွားလိုသော ကဏ္ဍကို ရွေးပါ -", ["Weather Forecast", "Model Accuracy Audit 📊"])
+
+# 2. လက်ရှိ ပုံမှန်ပြနေကျ မိုးလေဝသ ခန့်မှန်းချက် စာမျက်နှာ
+if app_mode == "Weather Forecast":
+    # ⚠️ မှတ်ချက် - လက်ရှိ app.py ထဲမှာ ရှိပြီးသား 
+    # ရေလှိုင်းအမြင့် (Wave Height) ဂရပ်တွေနဲ့ Timeline ကုဒ်အားလုံးကို 
+    # ဒီ (if block) အောက်ထဲသို့ အကုန်လုံး ရွှေ့ထည့်ပေးရပါမယ်။
+    pass 
+
+# 3. အလိုအလျောက် မှန်ကန်မှု စစ်ဆေးမည့် စာမျက်နှာသစ်
+elif app_mode == "Model Accuracy Audit 📊":
+    st.title("📊 DMH AI Forecast Automation Audit")
+    
+    # မိမိတို့ DB သို့မဟုတ် CSV မှ ခန့်မှန်းချက်နှင့် မြေပြင်ဒေတာ DataFrame များ လှမ်းယူခြင်း
+    # df_forecast, df_observed = load_your_data_functions()
+    
+    # (အရှေ့တွင် ပေးထားခဲ့သော UI/Graph ဆွဲသည့် ကုဒ်များကို ဒီနေရာတွင် ထည့်သွင်းပါ)
+
 # --- ၁။ Layout Setup ---
 st.set_page_config(page_title="DMH AI Weather Forecast System", layout="wide", page_icon="🌤️")
 mm_tz = pytz.timezone('Asia/Yangon')
