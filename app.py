@@ -476,17 +476,8 @@ elif mode_index == 4:
 
         # ဇယားခေါင်းစဉ်နှင့် ကတ်များကြား အကွာအဝေး သေချာခြားပေးရန် Clearfix ပြုလုပ်ခြင်း
         st.markdown("<div style='clear: both;'></div><br>", unsafe_allow_html=True)
-            
-        with c_pheno:
-            st.markdown("""
-            <div style='background-color: rgba(220, 53, 69, 0.15); border-left: 5px solid #dc3545; padding: 15px; border-radius: 5px; height: 180px;'>
-                <b style='color: #dc3545;'>🔴 လှိုင်းကြီးရာမှ အလွန်ကြီး</b><br>
-                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၄.၀ မီတာနှင့်အထက်</b></small><br>
-                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>မုန်တိုင်းဒဏ်ကြောင့် လှိုင်းလုံးကြီးများ ကုန်းဆွဲသကဲ့သို့ ဖြစ်နေသဖြင့် ရေကြောင်းခရီးစဉ်များနှင့် ရေလုပ်ငန်းများ <b>လုံးဝမပြုလုပ်ရန် ဆိုင်းငံ့ရမည်။</b></p>
-            </div>
-            """, unsafe_allow_html=True)
-
-        st.markdown("<br>", unsafe_allow_html=True)
+          
+         
             
         # Plotly Graph Generating
         st.subheader("📊 ၇ ရက်စာ လှိုင်းအမြင့် ပြောင်းလဲမှုဇယား" if lang == "မြန်မာ" else "📊 7-Day Wave Height Trend Chart")
