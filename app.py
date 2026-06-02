@@ -541,7 +541,8 @@ elif mode_index == 5:
     
     # Render Graph & Table
     render_icon_style_forecast(df_h)
-# --- NEW MODE 5: Air Quality Forecast Integration ---
+    
+    # --- NEW MODE 5: Air Quality Forecast Integration ---
 elif mode_index == 5:
     header_text = "😷 ၅ ရက်စာ လေထုအရည်အသွေးနှင့် အမှုန်အမွှား ခန့်မှန်းချက် (Air Quality Forecast)" if lang == "မြန်မာ" else "😷 5-Day Air Quality Forecast System"
     st.subheader(header_text)
