@@ -435,7 +435,7 @@ elif mode_index == 4:
             st.metric(label="လှိုင်းလာရာ အရပ်မျက်နှာ (Dominant Wave Dir)" if lang == "မြန်မာ" else "Dominant Wave Direction", value=f"{latest_dir}°")
             
         # Plotly Graph Generating
-        st.subheader("📊 ၁၆ ရက်စာ လှိုင်းအမြင့် ပြောင်းလဲမှုဇယား" if lang == "မြန်မာ" else "📊 16-Day Wave Height Trend Chart")
+        st.subheader("📊 ၇ ရက်စာ လှိုင်းအမြင့် ပြောင်းလဲမှုဇယား" if lang == "မြန်မာ" else "📊 7-Day Wave Height Trend Chart")
         fig_m = px.line(df_marine, x="Date", y="Max Wave Height (m)", 
                         title=f"{selected_city} - Wave Height Timeline",
                         labels={"Max Wave Height (m)": "လှိုင်းအမြင့် - မီတာ (m)" if lang == "မြန်မာ" else "Wave Height (m)"},
