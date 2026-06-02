@@ -386,7 +386,7 @@ elif mode_index == 3:
 
 # --- NEW MODE 4: Marine Wave Forecast Integration ---
 elif mode_index == 4:
-    header_text = "🌊 ပင်လယ်ပြင်လှိုင်းအခြေအနေ ခန့်မှန်းချက် (Marine Wave Forecast)" if lang == "မြန်မာ" else "🌊 Marine Wave Forecast System"
+    header_text = "🌊 ၇ ရက်စာ ပင်လယ်ပြင်လှိုင်းအခြေအနေ ခန့်မှန်းချက် (7-Day Marine Forecast)" if lang == "မြန်မာ" else "🌊 7-Day Marine Wave Forecast System"
     st.subheader(header_text)
     
     lat = active_dict[selected_city]["lat"]
@@ -411,10 +411,10 @@ elif mode_index == 4:
         # WMO Sea State Standard Warning Logic
         def get_wmo_marine_alert(height):
             if lang == "မြန်မာ":
-                if height < 1.25: return "🟢 လှိုင်းငြိမ်/အနည်းငယ် (ရေကြောင်းသွားလာမှု ဘေးကင်းပါသည်)"
+                if height < 1.25: return "🟢 လှိုင်းအနည်းငယ် (ရေကြောင်းသွားလာမှု ဘေးကင်းပါသည်)"
                 elif 1.25 <= height < 2.5: return "🟡 လှိုင်းအသင့်အတင့် (ကမ်းဝေးငါးဖမ်းရေယာဉ်များ သတိပြုရန်)"
                 elif 2.5 <= height < 4.0: return "🟠 လှိုင်းကြီးသည် (Rough Sea - ပင်လယ်ပြင်ခရီးသွားလာမှု အထူးသတိပေးချက်ထုတ်ရန်)"
-                else: return "🔴 လှိုင်းအလွန်ကြီးသည် (Phenomenal Sea - ရေကြောင်းသွားလာမှုများ လုံးဝမပြုလုပ်ရန်)"
+                else: return "🔴 လှိုင်းကြီးရာမှ အလွန်ကြီးသည် (Phenomenal Sea - ရေကြောင်းသွားလာမှု လုံးဝမပြုလုပ်ရန်)"
             else:
                 if height < 1.25: return "🟢 Calm to Slight Sea (Safe for Navigation)"
                 elif 1.25 <= height < 2.5: return "🟡 Moderate Sea (Coastal Crafts Caution)"
@@ -427,17 +427,59 @@ elif mode_index == 4:
         
         st.info(f"📍 **{selected_city}** | {marine_status}")
         
-        # Display Metrics Display
+        # Display Metrics
         m_col1, m_col2 = st.columns(2)
         with m_col1:
             st.metric(label="ယနေ့အမြင့်ဆုံး လှိုင်းအမြင့် (Max Wave Height)" if lang == "မြန်မာ" else "Today's Max Wave Height", value=f"{latest_h} m")
         with m_col2:
             st.metric(label="လှိုင်းလာရာ အရပ်မျက်နှာ (Dominant Wave Dir)" if lang == "မြန်မာ" else "Dominant Wave Direction", value=f"{latest_dir}°")
             
+        # --- 🌊 WMO Sea State သတ်မှတ်ချက် ၄ ကြောင်းအား အရောင်များဖြင့် ကတ်ပုံစံပြသခြင်း ---
+        st.markdown("### 📋 WMO Sea State လှိုင်းအမြင့်သတ်မှတ်ချက်များနှင့် သတိပေးချက်များ")
+        
+        c_slight, c_mod, c_rough, c_pheno = st.columns(4)
+        with c_slight:
+            st.markdown("""
+            <div style='background-color: rgba(40, 167, 69, 0.15); border-left: 5px solid #28a745; padding: 15px; border-radius: 5px; height: 180px;'>
+                <b style='color: #28a745;'>🟢 လှိုင်းအနည်းငယ် (Slight Sea)</b><br>
+                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၀.၅ မီတာမှ ၁.၂၅ မီတာအထိ</b></small><br>
+                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>ပင်လယ်ပြင် ငြိမ်သက်အေးချမ်းသဖြင့် ကမ်းနီး/ကမ်းဝေး ရေကြောင်းသွားလာမှုများနှင့် ရေလုပ်ငန်းများအားလုံး ဘေးကင်းစိတ်ချစွာ လုပ်ကိုင်နိုင်သည်။</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with c_mod:
+            st.markdown("""
+            <div style='background-color: rgba(255, 193, 7, 0.15); border-left: 5px solid #ffc107; padding: 15px; border-radius: 5px; height: 180px;'>
+                <b style='color: #d39e00;'>🟡 လှိုင်းအသင့်အတင့် (Moderate)</b><br>
+                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၁.၂၅ မီတာမှ ၂.၅ မီတာအထိ</b></small><br>
+                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>လှိုင်းခေါင်းဖြူများ စတင်တွေ့မြင်ရကာ ကမ်းဝေးငါးဖမ်းရေယာဉ်များနှင့် စက်လှေငယ်များ အထူးသတိပြု သွားလာရမည်။</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with c_rough:
+            st.markdown("""
+            <div style='background-color: rgba(253, 126, 20, 0.15); border-left: 5px solid #fd7e14; padding: 15px; border-radius: 5px; height: 180px;'>
+                <b style='color: #fd7e14;'>🟠 လှိုင်းကြီးသည် (Rough Sea)</b><br>
+                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၂.၅ မီတာမှ ၄.၀ မီတာအထိ</b></small><br>
+                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>လှိုင်းတံပိုးများ မြင့်မားပြင်းထန်လာသဖြင့် ပင်လယ်ပြင်ခရီးသွားလာမှုများကို အထူးသတိပေးချက် (Advisory Warning) ထုတ်ပြန်ရမည်။</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+        with c_pheno:
+            st.markdown("""
+            <div style='background-color: rgba(220, 53, 69, 0.15); border-left: 5px solid #dc3545; padding: 15px; border-radius: 5px; height: 180px;'>
+                <b style='color: #dc3545;'>🔴 လှိုင်းကြီးရာမှ အလွန်ကြီး</b><br>
+                <small style='color: #555;'>လှိုင်းအမြင့်: <b>၄.၀ မီတာနှင့်အထက်</b></small><br>
+                <p style='font-size: 0.85em; margin-top: 5px; color: #333;'>မုန်တိုင်းဒဏ်ကြောင့် လှိုင်းလုံးကြီးများ ကုန်းဆွဲသကဲ့သို့ ဖြစ်နေသဖြင့် ရေကြောင်းခရီးစဉ်များနှင့် ရေလုပ်ငန်းများ <b>လုံးဝမပြုလုပ်ရန် ဆိုင်းငံ့ရမည်။</b></p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+            
         # Plotly Graph Generating
         st.subheader("📊 ၇ ရက်စာ လှိုင်းအမြင့် ပြောင်းလဲမှုဇယား" if lang == "မြန်မာ" else "📊 7-Day Wave Height Trend Chart")
         fig_m = px.line(df_marine, x="Date", y="Max Wave Height (m)", 
-                        title=f"{selected_city} - Wave Height Timeline",
+                        title=f"{selected_city} - Wave Height Timeline (7-Days)",
                         labels={"Max Wave Height (m)": "လှိုင်းအမြင့် - မီတာ (m)" if lang == "မြန်မာ" else "Wave Height (m)"},
                         template="plotly_white")
         
