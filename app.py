@@ -541,7 +541,90 @@ elif mode_index == 5:
     
     # Render Graph & Table
     render_icon_style_forecast(df_h)
+# --- NEW MODE 5: Air Quality Forecast Integration ---
+elif mode_index == 5:
+    header_text = "😷 ၅ ရက်စာ လေထုအရည်အသွေးနှင့် အမှုန်အမွှား ခန့်မှန်းချက် (Air Quality Forecast)" if lang == "မြန်မာ" else "😷 5-Day Air Quality Forecast System"
+    st.subheader(header_text)
+    
+    lat = active_dict[selected_city]["lat"]
+    lon = active_dict[selected_city]["lon"]
+    
+    # Open-Meteo Air Quality API URL (PM2.5, PM10, O3, NO2 နှင့် European AQI ဒေတာများ တောင်းဆိုခြင်း)
+    aq_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,european_aqi&timezone=Asia/Yangon"
+    
+    try:
+        with st.spinner("လေထုအရည်အသွေး ဒေတာများ တွက်ချက်နေပါသည်..." if lang == "မြန်မာ" else "Analyzing Air Quality Data..."):
+            r_aq = requests.get(aq_url, timeout=30)
+            r_aq.raise_for_status()
+            res_aq = r_aq.json()
+            hourly_aq = res_aq["hourly"]
+            
+            df_aq = pd.DataFrame({
+                "DateTime": pd.to_datetime(hourly_aq["time"]),
+                "PM2.5 (μg/m³)": hourly_aq["pm2_5"],
+                "PM10 (μg/m³)": hourly_aq["pm10"],
+                "Ozone (μg/m³)": hourly_aq["ozone"],
+                "NO2 (μg/m³)": hourly_aq["nitrogen_dioxide"],
+                "AQI_Index": hourly_aq["european_aqi"]
+            })
+            
+        # European AQI Standard Text Alert Logic
+        def get_aqi_status(aqi):
+            if pd.isna(aqi): return "⚪ ဒေတာမရှိပါ"
+            if lang == "မြန်မာ":
+                if aqi <= 20: return "🟢 ကောင်းမွန်သည် (Good - ကျန်းမာရေးအတွက် စိတ်ချရပါသည်)"
+                elif aqi <= 40: return "🟡 အသင့်အတင့် (Fair - ထိခိုက်လွယ်သူများ သတိပြုရန်)"
+                elif aqi <= 60: return "🟠 မကျန်းမာနိုင်သော အခြေအနေ (Moderate - အပြင်ထွက်လျှင် Mask တပ်ရန်)"
+                elif aqi <= 80: return "🔴 ကျန်းမာရေး ထိခိုက်နိုင်သည် (Poor - ပြင်းထန်သော ကိုယ်လက်လှုပ်ရှားမှု ရှောင်ရန်)"
+                else: return "🟣 အလွန်အန္တရာယ်ကြီးသည် (Very Poor - အရေးပေါ် အခြေအနေ)"
+            else:
+                if aqi <= 20: return "🟢 Good (Safe for all)"
+                elif aqi <= 40: return "🟡 Fair (Sensitive groups should caution)"
+                elif aqi <= 60: return "🟠 Moderate (Wear mask outdoor)"
+                elif aqi <= 80: return "🔴 Poor (Avoid heavy outdoor activities)"
+                else: return "🟣 Very Poor (Health Alert)"
 
+        # လက်ရှိအချိန်နှင့် ကိုက်ညီသော ဒေတာကို ဆွဲထုတ်ခြင်း
+        now_sgt = pd.Timestamp.now(tz="Asia/Yangon").tz_localize(None)
+        idx_closest = (df_aq["DateTime"] - now_sgt).abs().idxmin()
+        
+        current_aqi = df_aq["AQI_Index"].iloc[idx_closest]
+        current_pm25 = df_aq["PM2.5 (μg/m³)"].iloc[idx_closest]
+        current_pm10 = df_aq["PM10 (μg/m³)"].iloc[idx_closest]
+        
+        aqi_status = get_aqi_status(current_aqi)
+        st.info(f"📍 **{selected_city}** (လက်ရှိအချိန် လေထုအခြေအနေ) | {aqi_status}")
+        
+        # Display Core Metrics
+        aq_col1, aq_col2, aq_col3 = st.columns(3)
+        with aq_col1:
+            st.metric(label="ဥရောပစံနှုန်း AQI အညွှန်းကိန်း" if lang == "မြန်မာ" else "European AQI Index", value=f"{current_aqi}")
+        with aq_col2:
+            st.metric(label="PM2.5 အမှုန်အမွှား ပမာဏ" if lang == "မြန်မာ" else "PM2.5 Level", value=f"{current_pm25} μg/m³")
+        with aq_col3:
+            st.metric(label="PM10 အမှုန်အမွှား ပမာဏ" if lang == "မြန်မာ" else "PM10 Level", value=f"{current_pm10} μg/m³")
+            
+        # --- 📊 ၅ ရက်စာ အမှုန်အမွှား ပြောင်းလဲမှု ဂရပ်ပုံစံ (Multi-line Smooth Chart) ---
+        st.subheader("📊 ၅ ရက်စာ လေထုညစ်ညမ်းမှု အညွှန်းကိန်း ပြောင်းလဲမှုဇယား" if lang == "မြန်မာ" else "📊 5-Day Air Quality Trend Chart")
+        
+        # ပင်မ အမှုန်အမွှား ၄ မျိုးလုံးကို ဂရပ်တစ်ခုတည်းမှာ နှိုင်းယှဉ်ပြသခြင်း
+        fig_aq = px.line(df_aq, x="DateTime", y=["PM2.5 (μg/m³)", "PM10 (μg/m³)", "Ozone (μg/m³)", "NO2 (μg/m³)"],
+                         title=f"{selected_city} - 5-Day Pollutants Forecast Timeline",
+                         labels={"value": "ပမာဏ - မိုက်ခရိုဂရမ် (μg/m³)" if lang == "မြန်မာ" else "Concentration (μg/m³)", "DateTime": "နေ့ရက်/အချိန်", "variable": "ဓာတ်ငွေ့/အမှုန်"},
+                         template="plotly_white")
+        
+        # လိုင်းများကို လှိုင်းတွန့်ပုံစံ ချောမွေ့အောင် ပြုလုပ်ခြင်း
+        fig_aq.update_traces(line_shape='spline', line_smoothing=1.2)
+        st.plotly_chart(fig_aq, use_container_width=True)
+        
+        # Air Quality Data Table View
+        with st.expander("📋 အသေးစိတ် လေထုအရည်အသွေး တစ်နာရီချင်းစီအလိုက် ဒေတာဇယား" if lang == "မြန်မာ" else "📋 Detailed Air Quality Forecast Data"):
+            df_aq_disp = df_aq.copy()
+            df_aq_disp['DateTime'] = df_aq_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
+            st.dataframe(df_aq_disp.set_index("DateTime"), use_container_width=True)
+            
+    except Exception as e_aq:
+        st.error(f"Air Quality API ချိတ်ဆက်မှု အဆင်မပြေပါ - {e_aq}")
 # --- ၈။ Export Report ---
 st.markdown("---")
 if st.button("🚀 Export All Stations Report"):
