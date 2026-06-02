@@ -384,57 +384,65 @@ elif mode_index == 3:
     st.subheader("🕒 3-Hourly AccuWeather Style Graph & Forecast (Domestic)")
     render_icon_style_forecast(df_h)
 
-# --- NEW MODE 4: Marine Wave Forecast Integration ---
+# --- NEW MODE 4: Marine Wave Forecast Integration (Hourly & Smooth Chart) ---
 elif mode_index == 4:
-    header_text = "🌊 ၇ ရက်စာ ပင်လယ်ပြင်လှိုင်းအခြေအနေ ခန့်မှန်းချက် (7-Day Marine Forecast)" if lang == "မြန်မာ" else "🌊 7-Day Marine Wave Forecast System"
+    header_text = "🌊 ၇ ရက်စာ ပင်လယ်ပြင်လှိုင်းအခြေအနေ ခန့်မှန်းချက် (Hourly Marine Forecast)" if lang == "မြန်မာ" else "🌊 7-Day Hourly Marine Wave Forecast"
     st.subheader(header_text)
     
     lat = active_dict[selected_city]["lat"]
     lon = active_dict[selected_city]["lon"]
     
-    marine_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&daily=wave_height_max,wave_direction_dominant,wave_period_max&timezone=Asia/Yangon"
+    # 7 ရက်စာအတွက် တစ်နာရီချင်းစီအလိုက် (Hourly) ဒေတာကို တောင်းဆိုခြင်း
+    marine_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&hourly=wave_height,wave_direction,wave_period&timezone=Asia/Yangon"
     
     try:
-        with st.spinner("ပင်လယ်ပြင်ဒေတာများ ရယူနေပါသည်..." if lang == "မြန်မာ" else "Fetching Marine Data..."):
+        with st.spinner("တစ်နာရီချင်းစီအလိုက် ပင်လယ်ပြင်ဒေတာများ ရယူနေပါသည်..." if lang == "မြန်မာ" else "Fetching Hourly Marine Data..."):
             r_marine = requests.get(marine_url, timeout=30)
             r_marine.raise_for_status()
             res_marine = r_marine.json()
-            daily_marine = res_marine["daily"]
+            hourly_marine = res_marine["hourly"]
             
+            # Hourly DataFrame တည်ဆောက်ခြင်း
             df_marine = pd.DataFrame({
-                "Date": pd.to_datetime(daily_marine["time"]),
-                "Max Wave Height (m)": daily_marine["wave_height_max"],
-                "Wave Direction (°)": daily_marine["wave_direction_dominant"],
-                "Max Wave Period (s)": daily_marine["wave_period_max"]
+                "DateTime": pd.to_datetime(hourly_marine["time"]),
+                "Wave Height (m)": hourly_marine["wave_height"],
+                "Wave Direction (°)": hourly_marine["wave_direction"],
+                "Wave Period (s)": hourly_marine["wave_period"]
             })
             
         # WMO Sea State Standard Warning Logic
         def get_wmo_marine_alert(height):
+            if pd.isna(height): return "⚪ ဒေတာမရှိပါ"
             if lang == "မြန်မာ":
                 if height < 1.25: return "🟢 လှိုင်းအနည်းငယ် (ရေကြောင်းသွားလာမှု ဘေးကင်းပါသည်)"
                 elif 1.25 <= height < 2.5: return "🟡 လှိုင်းအသင့်အတင့် (ကမ်းဝေးငါးဖမ်းရေယာဉ်များ သတိပြုရန်)"
-                elif 2.5 <= height < 4.0: return "🟠 လှိုင်းကြီးသည် (Rough Sea - ပင်လယ်ပြင်ခရီးသွားလာမှု အထူးသတိပေးချက်ထုတ်ရန်)"
-                else: return "🔴 လှိုင်းကြီးရာမှ အလွန်ကြီးသည် (Phenomenal Sea - ရေကြောင်းသွားလာမှု လုံးဝမပြုလုပ်ရန်)"
+                elif 2.5 <= height < 4.0: return "🟠 လှိုင်းကြီးသည် (Rough Sea - အထူးသတိပေးချက်ထုတ်ရန်)"
+                else: return "🔴 လှိုင်းကြီးရာမှ အလွန်ကြီးသည် (Phenomenal Sea - လုံးဝမပြုလုပ်ရန်)"
             else:
                 if height < 1.25: return "🟢 Calm to Slight Sea (Safe for Navigation)"
                 elif 1.25 <= height < 2.5: return "🟡 Moderate Sea (Coastal Crafts Caution)"
                 elif 2.5 <= height < 4.0: return "🟠 Rough Sea (Advisory Warning Required)"
                 else: return "🔴 Very Rough/Phenomenal Sea (Suspension of Navigation)"
 
-        latest_h = df_marine["Max Wave Height (m)"].iloc[0]
-        latest_dir = df_marine["Wave Direction (°)"].iloc[0]
+        # လက်ရှိအချိန်နှင့် အနီးစပ်ဆုံးတူသော ဒေတာကို ယူခြင်း
+        now_sgt = pd.Timestamp.now(tz="Asia/Yangon").tz_localize(None)
+        # အချိန်အနီးစပ်ဆုံးတူညီတဲ့ Row ကို ရှာပါ
+        idx_closest = (df_marine["DateTime"] - now_sgt).abs().idxmin()
+        
+        latest_h = df_marine["Wave Height (m)"].iloc[idx_closest]
+        latest_dir = df_marine["Wave Direction (°)"].iloc[idx_closest]
         marine_status = get_wmo_marine_alert(latest_h)
         
-        st.info(f"📍 **{selected_city}** | {marine_status}")
+        st.info(f"📍 **{selected_city}** (လက်ရှိခန့်မှန်းခြေအချိန်: {df_marine['DateTime'].iloc[idx_closest].strftime('%Y-%m-%d %H:%M')}) | {marine_status}")
         
         # Display Metrics
         m_col1, m_col2 = st.columns(2)
         with m_col1:
-            st.metric(label="ယနေ့အမြင့်ဆုံး လှိုင်းအမြင့် (Max Wave Height)" if lang == "မြန်မာ" else "Today's Max Wave Height", value=f"{latest_h} m")
+            st.metric(label="လက်ရှိအချိန် လှိုင်းအမြင့် (Current Wave Height)" if lang == "မြန်မာ" else "Current Wave Height", value=f"{latest_h} m")
         with m_col2:
-            st.metric(label="လှိုင်းလာရာ အရပ်မျက်နှာ (Dominant Wave Dir)" if lang == "မြန်မာ" else "Dominant Wave Direction", value=f"{latest_dir}°")
+            st.metric(label="လှိုင်းလာရာ အရပ်မျက်နှာ (Wave Direction)" if lang == "မြန်မာ" else "Wave Direction", value=f"{latest_dir}°")
             
-       # --- 🌊 WMO Sea State သတ်မှတ်ချက် ၄ ကြောင်းအား အရောင်များဖြင့် ကတ်ပုံစံပြသခြင်း (Fix Overflow & Responsive) ---
+        # --- 🌊 WMO Sea State သတ်မှတ်ချက် ၄ ကြောင်းအား အရောင်များဖြင့် ကတ်ပုံစံပြသခြင်း ---
         st.markdown("### 📋 WMO Sea State လှိုင်းအမြင့်သတ်မှတ်ချက်များနှင့် သတိပေးချက်များ")
         
         c_slight, c_mod, c_rough, c_pheno = st.columns(4)
@@ -470,31 +478,32 @@ elif mode_index == 4:
             <div style='background-color: rgba(220, 53, 69, 0.12); border-left: 5px solid #dc3545; padding: 12px; border-radius: 6px; min-height: 190px; height: auto; margin-bottom: 10px;'>
                 <b style='color: #dc3545; font-size: 1.05em;'>🔴 လှိုင်းကြီးရာမှ အလွန်ကြီး<br>(Very Rough to Phenomenal)</b><br>
                 <span style='color: #444; font-size: 0.9em;'>လှိုင်းအမြင့်: <b>၄.၀ မီတာနှင့်အထက်</b></span><br>
-                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>မုန်တိုင်းဒဏ်ကြောင့် လှိုင်းလုံးကြီးများ အလွန်ပြင်ထန်သဖြင့် ရေကြောင်းခရီးစဉ်များနှင့် ရေလုပ်ငန်းများ <b>လုံးဝမပြုလုပ်ရန် ဆိုင်းငံ့ရမည်။</b></p>
+                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>မုန်တိုင်းဒဏ်ကြောင့် လှိုင်းလုံးကြီးများ ထကြွသောင်းကျန်းနေသဖြင့် ရေကြောင်းခရီးစဉ်များနှင့် ရေလုပ်ငန်းများ <b>လုံးဝမပြုလုပ်ရန် ဆိုင်းငံ့ရမည်။</b></p>
             </div>
             """, unsafe_allow_html=True)
 
-        # ဇယားခေါင်းစဉ်နှင့် ကတ်များကြား အကွာအဝေး သေချာခြားပေးရန် Clearfix ပြုလုပ်ခြင်း
         st.markdown("<div style='clear: both;'></div><br>", unsafe_allow_html=True)
-          
-         
             
-        # Plotly Graph Generating
-        st.subheader("📊 ၇ ရက်စာ လှိုင်းအမြင့် ပြောင်းလဲမှုဇယား" if lang == "မြန်မာ" else "📊 7-Day Wave Height Trend Chart")
-        fig_m = px.line(df_marine, x="Date", y="Max Wave Height (m)", 
-                        title=f"{selected_city} - Wave Height Timeline (7-Days)",
-                        labels={"Max Wave Height (m)": "လှိုင်းအမြင့် - မီတာ (m)" if lang == "မြန်မာ" else "Wave Height (m)"},
+        # Plotly Graph Generating (Hourly Smooth Chart)
+        st.subheader("📊 အချိန်အလိုက် လှိုင်းအမြင့် ပြောင်းလဲမှုလှိုင်းဇယား" if lang == "မြန်မာ" else "📊 Hourly Wave Height Trend Chart")
+        
+        fig_m = px.line(df_marine, x="DateTime", y="Wave Height (m)", 
+                        title=f"{selected_city} - 7-Day Hourly Wave Height Timeline",
+                        labels={"Wave Height (m)": "လှိုင်းအမြင့် - မီတာ (m)" if lang == "မြန်မာ" else "Wave Height (m)", "DateTime": "နေ့ရက်/အချိန် (Time)"},
                         template="plotly_white")
+        
+        # Plotly လိုင်းကို ပိုမိုဝိုင်းဝန်းပြီး ချောမွေ့သွားစေရန် (Smooth Curve ဖြစ်စေရန် spline ပြောင်းခြင်း)
+        fig_m.update_traces(line_shape='spline', line_smoothing=1.3)
         
         fig_m.add_hline(y=2.5, line_dash="dash", line_color="orange", annotation_text="Rough Sea (၂.၅ မီတာ)" if lang == "မြန်မာ" else "Rough Sea Threshold")
         fig_m.add_hline(y=4.0, line_dash="dash", line_color="red", annotation_text="Very Rough (၄.၀ မီတာ)" if lang == "မြန်မာ" else "Very Rough Threshold")
         st.plotly_chart(fig_m, use_container_width=True)
         
         # Marine Data Table View
-        with st.expander("📋 အသေးစိတ် ပင်လယ်ပြင် ကိန်းဂဏန်းဒေတာဇယား" if lang == "မြန်မာ" else "📋 Detailed Marine Data Table"):
+        with st.expander("📋 အသေးစိတ် ပင်လယ်ပြင် တစ်နာရီချင်းစီအလိုက် ဒေတာဇယား" if lang == "မြန်မာ" else "📋 Detailed Hourly Marine Data Table"):
             df_marine_disp = df_marine.copy()
-            df_marine_disp['Date'] = df_marine_disp['Date'].dt.strftime('%Y-%m-%d')
-            st.dataframe(df_marine_disp.set_index("Date"), use_container_width=True)
+            df_marine_disp['DateTime'] = df_marine_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
+            st.dataframe(df_marine_disp.set_index("DateTime"), use_container_width=True)
             
     except Exception as em:
         st.error(f"ပင်လယ်ပြင် API ချိတ်ဆက်မှု အဆင်မပြေပါ - {em}")
