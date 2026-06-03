@@ -478,7 +478,7 @@ elif mode_index == 4:
             <div style='background-color: rgba(253, 126, 20, 0.12); border-left: 5px solid #fd7e14; padding: 12px; border-radius: 6px; min-height: 190px; height: auto; margin-bottom: 10px;'>
                 <b style='color: #fd7e14; font-size: 1.05em;'>🟠 လှိုင်းကြီးသည်<br>(Rough Sea)</b><br>
                 <span style='color: #444; font-size: 0.9em;'>လှိုင်းအမြင့်: <b>၂.၅ မှ ၄.၀ မီတာ</b></span><br>
-                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>လှိုင်းတံပိုးများ မြင့်မားပြင်းထန်လာသဖြင့် ပင်လယ်ပြင်ခရီးသွားလာမှုများကို အထူးသတိပေးချက် (Advisory Warning) ထုတ်ပြန်ရမည်။</p>
+                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>လှိုင်းတံပိုးများ မြင့်မားပြင်းထန်လာသဖြင့် ပင်လယ်ပြင်ခရီးသွားလာမှုများကို အထူးသတိပြု သွားလာရမည်။</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -487,7 +487,7 @@ elif mode_index == 4:
             <div style='background-color: rgba(220, 53, 69, 0.12); border-left: 5px solid #dc3545; padding: 12px; border-radius: 6px; min-height: 190px; height: auto; margin-bottom: 10px;'>
                 <b style='color: #dc3545; font-size: 1.05em;'>🔴 လှိုင်းကြီးရာမှ အလွန်ကြီး<br>(Very Rough to Phenomenal)</b><br>
                 <span style='color: #444; font-size: 0.9em;'>လှိုင်းအမြင့်: <b>၄.၀ မီတာနှင့်အထက်</b></span><br>
-                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>မုန်တိုင်းဒဏ်ကြောင့် လှိုင်းလုံးကြီးများ ထကြွသောင်းကျန်းနေသဖြင့် ရေကြောင်းခရီးစဉ်များနှင့် ရေလုပ်ငန်းများ <b>လုံးဝမပြုလုပ်ရန် ဆိုင်းငံ့ရမည်။</b></p>
+                <p style='font-size: 0.85em; margin-top: 6px; margin-bottom: 0; color: #333; line-height: 1.4;'>မုန်တိုင်းဒဏ်ကြောင့် လှိုင်းလုံးကြီးများ အလွန်ပြင်းထန်သဖြင့် ရေကြောင်းခရီးစဉ်များနှင့် ရေလုပ်ငန်းများ <b>လုံးဝမပြုလုပ်ရန် ဆိုင်းငံ့ရမည်။</b></p>
             </div>
             """, unsafe_allow_html=True)
 
