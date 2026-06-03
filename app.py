@@ -605,42 +605,6 @@ elif mode_index == 6:
         st.error(f"လေထုအရည်အသွေး API ချိတ်ဆက်မှု အဆင်မပြေပါ - {eaq}")
 
                 
-                # CSV Export Report Button
-                csv_data = summary_df.to_csv().encode('utf-8')
-                st.download_button("📥 Export Audit Report (CSV)", csv_data, "DMH_Model_Audit_Report.csv", "text/csv")
-                
-                st.markdown("---")
-                
-                # Dynamic Dropdown ဖြင့် Mode တစ်ခုချင်းစီကို တိုက်စစ်ခြင်း
-                st.markdown("### 🔍 Mode တစ်ခုချင်းစီအလိုက် Time-Series တိုက်ဆိုင်စစ်ဆေးခြင်း")
-                selected_audit_mode = st.selectbox("စစ်ဆေးလိုသော Mode ကို ရွေးချယ်ပါ -", [f"Mode_{i}" for i in range(1, 8)])
-                
-                merged_data = verifier.merge_data()
-                
-                # Plotly Chart ဖြင့် စုစည်းဆွဲသားခြင်း
-                fig_audit = go.Figure()
-                fig_audit.add_trace(go.Scatter(
-                    x=merged_data['Date'], y=merged_data[selected_audit_mode],
-                    mode='lines+markers', name=f'AI Forecast ({selected_audit_mode})',
-                    line=dict(color='#1f77b4', width=2)
-                ))
-                fig_audit.add_trace(go.Scatter(
-                    x=merged_data['Date'], y=merged_data['Actual_Temp'],
-                    mode='lines+markers', name='Actual Observed (မြေပြင်)',
-                    line=dict(color='#ff7f0e', width=2, dash='dash')
-                ))
-                
-                fig_audit.update_layout(
-                    title=f"{selected_audit_mode} ခန့်မှန်းချက်နှင့် မြေပြင်တိုင်းထွာချက် နှိုင်းယှဉ်မှု ဂရပ်",
-                    xaxis_title="နေ့စွဲ (Date)",
-                    yaxis_title="အပူချိန် (Temperature °C)",
-                    hovermode="x unified",
-                    template="plotly_white"
-                )
-                st.plotly_chart(fig_audit, use_container_width=True)
-            else:
-                st.error("ဒေတာများ ပေါင်းစပ်ရာတွင် လွဲချော်မှုရှိနေပါသည်။ Date နှင့် Station Format ကို စစ်ဆေးပါ။")
-
 # --- ၈။ Export Report ---
 st.markdown("---")
 if st.button("🚀 Export All Stations Report"):
