@@ -604,68 +604,6 @@ elif mode_index == 6:
     except Exception as eaq:
         st.error(f"လေထုအရည်အသွေး API ချိတ်ဆက်မှု အဆင်မပြေပါ - {eaq}")
 
-# --- 🎯 Mode 7: Model Accuracy Audit (အလိုအလျောက် စစ်ဆေးချက်ကဏ္ဍ) ---
-elif mode_index == 7:
-    st.subheader("📊 DMH AI Forecast Automation Audit Dashboard")
-    st.info("🤖 ဤစနစ်သည် AI Forecasting Models များ၏ ခန့်မှန်းချက်များနှင့် မြေပြင်အမှန်တကယ် တိုင်းထွာရရှိသော အပူချိန် (Actual Data) များကို တိုက်ဆိုင်စစ်ဆေးပေးသော နေရာဖြစ်ပါသည်။")
-    
-    if DMHForecastVerification is None:
-        st.error("❌ `verification_engine.py` ဖိုင် သို့မဟုတ် Class ကို ရှာမတွေ့ပါ။ ကျေးဇူးပြု၍ ဖိုင်အမည်နှင့် Path လမ်းကြောင်း မှန်ကန်မှုရှိမရှိ ပြန်လည်စစ်ဆေးပါ။")
-    else:
-        st.markdown("### 📤 အချက်အလက်ဖိုင်များ တင်သွင်းရန် (File Upload)")
-        c_up1, c_up2 = st.columns(2)
-        
-        with c_up1:
-            file_forecast = st.file_uploader("📂 Forecast CSV တင်ရန် (Columns: Date, Station, Mode_1...Mode_7)", type=["csv"], key="fc_up")
-        with c_up2:
-            file_observed = st.file_uploader("📂 Observed/Actual CSV တင်ရန် (Columns: Date, Station, Actual_Temp)", type=["csv"], key="ob_up")
-            
-        if file_forecast and file_observed:
-            try:
-                # ဒေတာဖတ်ခြင်း
-                df_fc = pd.read_csv(file_forecast)
-                df_ob = pd.read_csv(file_observed)
-                
-                # 📝 ရုံးသုံးစံသတ်မှတ်ချက်ဖြစ်သော 'Ayeyarwady Delta' သို့ အလိုအလျောက် ပြုပြင်ခြင်း (Data Cleaning)
-                if 'Station' in df_fc.columns:
-                    df_fc['Station'] = df_fc['Station'].replace({'Aya Delta': 'Ayeyarwady Delta'})
-                if 'Station' in df_ob.columns:
-                    df_ob['Station'] = df_ob['Station'].replace({'Aya Delta': 'Ayeyarwady Delta'})
-                
-                with st.spinner("Accuracy Metrics (MAE, RMSE, R²) များကို တွက်ချက်နေပါသည်..."):
-                    # Verification Engine ကို Run ခြင်း
-                    verifier = DMHForecastVerification(df_fc, df_ob)
-                    audit_results_df = verifier.calculate_all_modes()
-                    
-                if not audit_results_df.empty:
-                    st.success("✅ Audit Metrics တွက်ချက်မှု အောင်မြင်ပါသည်!")
-                    
-                    # ကတ်ပြားလေးများဖြင့် Highlight ပြသခြင်း (ဥပမာ Mode_1 ၏ ရလဒ်)
-                    if "Mode_1" in audit_results_df.index:
-                        m1_mae = audit_results_df.loc["Mode_1", "MAE (°C)"]
-                        m1_rmse = audit_results_df.loc["Mode_1", "RMSE (°C)"]
-                        m1_r2 = audit_results_df.loc["Mode_1", "R² Score"]
-                        
-                        aud_c1, aud_c2, aud_c3 = st.columns(3)
-                        aud_c1.metric("Mode_1 MAE", f"{m1_mae} °C", delta="Lower is Better", delta_color="inverse")
-                        aud_c2.metric("Mode_1 RMSE", f"{m1_rmse} °C", delta="Lower is Better", delta_color="inverse")
-                        aud_c3.metric("Mode_1 R² Score", f"{m1_r2}", delta="Closer to 1 is Better")
-                        
-                    st.write("") 
-                    st.subheader("📋 Comprehensive Summary Table (All Modes)")
-                    
-                    # မော်ဒယ်များအနက် အမှားအနည်းဆုံး (Best Fit) ဖြစ်သော MAE, RMSE နှင့် အကောင်းဆုံး R² ကို အရောင်ဖြင့် Highlight ပြသခြင်း
-                    st.dataframe(
-                        audit_results_df.style.highlight_min(axis=0, color="#d4edda", subset=["MAE (°C)", "RMSE (°C)"])
-                                              .highlight_max(axis=0, color="#d4edda", subset=["R² Score"])
-                    )
-                else:
-                    st.warning("⚠️ နှိုင်းယှဉ်ရန် ကိုက်ညီသော Date နှင့် Station ဒေတာ ရှာမတွေ့ပါ။ ဖိုင်တွင်းရှိ အချက်အလက်ပုံစံများကို ပြန်စစ်ပါ။")
-                    
-            except Exception as audit_err:
-                st.error(f"ဒေတာဆန်းစစ်ချက် လုပ်ဆောင်ရာတွင် အမှားအယွင်းရှိနေပါသည် - {audit_err}")
-        else:
-            st.info("💡 ဆန်းစစ်ချက် စတင်ရန်အတွက် အထက်ပါနေရာတွင် Forecast CSV နှင့် Observed CSV ဖိုင်နှစ်ခုလုံးကို တင်ပေးပါဗျာ။")
                 
                 # CSV Export Report Button
                 csv_data = summary_df.to_csv().encode('utf-8')
