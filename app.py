@@ -589,63 +589,83 @@ elif mode_index == 6:
             
         st.subheader("📊 ၅ ရက်စာ လေထုညစ်ညမ်းမှု အညွှန်းကိန်း ပြောင်းလဲမှုဇယား")
         fig_aq = px.line(df_aq, x="DateTime", y=["PM2.5 (μg/m³)", "PM10 (μg/m³)", "Ozone (μg/m³)", "NO2 (μg/m³)"],
-                         title=f"{selected_city} - 5-Day Pollutants Timeline",
+                        
+title=f"{selected_city} - 5-Day Pollutants Timeline",
+                         labels={"DateTime": "နေ့ရက်/အချိန် (Time)", "value": "ပမာဏ (μg/m³)"},
                          template="plotly_white")
-        fig_aq.update_traces(line_shape='spline', line_smoothing=1.2)
-        st.plotly_chart(fig_aq, use_container_width=True)
-        
-        with st.expander("📋 အသေးစိတ် ဒေတာဇယား"):
-            df_aq_disp = df_aq.copy()
-            df_aq_disp['DateTime'] = df_aq_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
-            st.dataframe(df_aq_disp.set_index("DateTime"), use_container_width=True)
+            st.plotly_chart(fig_aq, use_container_width=True)
             
-    except Exception as e_aq:
-        st.error(f"လေထုအရည်အသွေး API ချိတ်ဆက်မှု အဆင်မပြေပါ - {e_aq}")
+            with st.expander("📋 အသေးစိတ် လေထုအရည်အသွေး တစ်နာရီချင်းစီအလိုက် ဒေတာဇယား"):
+                df_aq_disp = df_aq.copy()
+                df_aq_disp['DateTime'] = df_aq_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
+                st.dataframe(df_aq_disp.set_index("DateTime"), use_container_width=True)
+                
+    except Exception as eaq:
+        st.error(f"လေထုအရည်အသွေး API ချိတ်ဆက်မှု အဆင်မပြေပါ - {eaq}")
 
-# 💡 Mode 7: Model Accuracy Audit Page (အသစ်တိုးလိုက်သော အလိုအလျောက် စစ်ဆေးချက်အပိုင်း)
+# --- 🎯 Mode 7: Model Accuracy Audit (အလိုအလျောက် စစ်ဆေးချက်) ---
 elif mode_index == 7:
     st.subheader("📊 DMH AI Forecast Automation Audit Dashboard")
-    st.write("Mode ၇ ခုလုံးမှ ထွက်ပေါ်လာသော AI ခန့်မှန်းချက်များနှင့် တကယ့်မြေပြင်တိုင်းထွာချက် (Observed Data) များကို တစ်ပြိုင်နက် နှိုင်းယှဉ်စစ်ဆေးခြင်း။")
+    st.info("🤖 ဤစနစ်သည် AI Forecasting Models များ၏ ခန့်မှန်းချက်များနှင့် မြေပြင်အမှန်တကယ် တိုင်းထွာရရှိသော အပူချိန် (Actual Data) များကို တိုက်ဆိုင်စစ်ဆေးပေးသော နေရာဖြစ်ပါသည်။")
     
     if DMHForecastVerification is None:
-        st.error("❌ `verification_engine.py` ဖိုင်ကို ရှာမတွေ့ပါ။ လမ်းကြောင်း မှန်မမှန် ပြန်လည်စစ်ဆေးပေးပါဗျာ။")
+        st.error("❌ `verification_engine.py` ဖိုင် သို့မဟုတ် Class ကို ရှာမတွေ့ပါ။ ကျေးဇူးပြု၍ GitHub Repository ရှိ main branch ထဲတွင် ဖိုင်ရှိမရှိ ပြန်လည်စစ်ဆေးပါ။")
     else:
-        # --- Database/CSV မှ ဒေတာဖတ်ယူခြင်း (Mock သို့မဟုတ် မိမိတို့ Real Data နေရာသွင်းရန်) ---
-        # ⚠️ လက်ရှိလုပ်ငန်းခွင်သုံး စခန်းဒေတာများနှင့် ကိုက်ညီရန် Session သို့မဟုတ် ယာယီ DataFrame အဖြစ် သတ်မှတ်ပေးထားခြင်း
-        df_forecast = st.session_state.get('df_forecast', pd.DataFrame())
-        df_observed = st.session_state.get('df_observed', pd.DataFrame())
+        # File Uploader များ တည်ဆောက်ခြင်း
+        st.markdown("### 📤 အချက်အလက်ဖိုင်များ တင်သွင်းရန်")
+        c_up1, c_up2 = st.columns(2)
         
-        if df_forecast.empty or df_observed.empty:
-            st.warning("⚠️ စစ်ဆေးရန် ခန့်မှန်းချက်ဒေတာ (Forecast Data) နှင့် မြေပြင်ဒေတာ (Actual Observed) များ မရှိသေးပါ။")
-            st.info("💡 တွက်ချက်မှုစနစ်ကို စမ်းသပ်ကြည့်နိုင်ရန် အောက်ပါ Button ကိုနှိပ်ပြီး Mock Data ထည့်သွင်းနိုင်ပါတယ်ဗျာ။")
+        with c_up1:
+            file_forecast = st.file_uploader("📂 Forecast CSV တင်ရန် (Columns: Date, Station, Mode_1...Mode_7)", type=["csv"], key="fc_up")
+        with c_up2:
+            file_observed = st.file_uploader("📂 Observed/Actual CSV တင်ရန် (Columns: Date, Station, Actual_Temp)", type=["csv"], key="ob_up")
             
-            if st.button("🧪 Generate Mock Data for Testing"):
-                # စမ်းသပ်ရန် ဒေတာအတု ဖန်တီးပေးခြင်း
-                dates = pd.date_range(start="2026-05-01", periods=30, freq='D')
-                stations = ["Naypyidaw"] * 30
+        if file_forecast and file_observed:
+            try:
+                # ဒေတာဖတ်ခြင်း
+                df_fc = pd.read_csv(file_forecast)
+                # သင့်ရုံးရဲ့ Standard 'Ayeyarwady Delta' စာလုံးပေါင်းအတွက် မဖြစ်မနေ အစားထိုးခြင်း (Data Cleaning)
+                if 'Station' in df_fc.columns:
+                    df_fc['Station'] = df_fc['Station'].replace({'Aya Delta': 'Ayeyarwady Delta'})
                 
-                mock_fc = pd.DataFrame({"Date": dates, "Station": stations})
-                for i in range(1, 8):
-                    mock_fc[f"Mode_{i}"] = np.random.uniform(32.0, 38.0, size=30) + (i * 0.2)
+                df_ob = pd.read_csv(file_observed)
+                if 'Station' in df_ob.columns:
+                    df_ob['Station'] = df_ob['Station'].replace({'Aya Delta': 'Ayeyarwady Delta'})
+                
+                with st.spinner("Accuracy Metrics (MAE, RMSE, R²) များကို တွက်ချက်နေပါသည်..."):
+                    # Verification Engine အလုပ်လုပ်စေခြင်း
+                    verifier = DMHForecastVerification(df_fc, df_ob)
+                    audit_results_df = verifier.calculate_all_modes()
                     
-                mock_obs = pd.DataFrame({
-                    "Date": dates,
-                    "Station": stations,
-                    "Actual_Temp": np.random.uniform(32.0, 38.0, size=30)
-                })
-                
-                st.session_state['df_forecast'] = mock_fc
-                st.session_state['df_observed'] = mock_obs
-                st.rerun()
+                if not audit_results_df.empty:
+                    st.success("✅ Audit Metrics တွက်ချက်မှု အောင်မြင်ပါသည်!")
+                    
+                    # ကတ်ပြားလေးများဖြင့် ပြသခြင်း (ဥပမာ Mode_1 ၏ ရလဒ်)
+                    if "Mode_1" in audit_results_df.index:
+                        m1_mae = audit_results_df.loc["Mode_1", "MAE (°C)"]
+                        m1_rmse = audit_results_df.loc["Mode_1", "RMSE (°C)"]
+                        m1_r2 = audit_results_df.loc["Mode_1", "R² Score"]
+                        
+                        aud_c1, aud_c2, aud_c3 = st.columns(3)
+                        aud_c1.metric("Mode_1 Best MAE", f"{m1_mae} °C", delta="Lower is Better", delta_color="inverse")
+                        aud_c2.metric("Mode_1 Best RMSE", f"{m1_rmse} °C", delta="Lower is Better", delta_color="inverse")
+                        aud_c3.metric("Mode_1 R² Fit Score", f"{m1_r2}", delta="Closer to 1 is Better")
+                        
+                    st.write("") # Layout ညှိရန် Space ခြားခြင်း
+                    st.subheader("📋 Comprehensive Summary Table (All Modes)")
+                    
+                    # အကောင်းဆုံး (အနည်းဆုံး) MAE နှင့် RMSE ကို စိမ်းရောင်ဖြင့် Highlight ပြပေးခြင်း
+                    st.dataframe(
+                        audit_results_df.style.highlight_min(axis=0, color="#d4edda", subset=["MAE (°C)", "RMSE (°C)"])
+                                              .highlight_max(axis=0, color="#d4edda", subset=["R² Score"])
+                    )
+                else:
+                    st.warning("⚠️ နှိုင်းယှဉ်ရန် ကိုက်ညီသော Date နှင့် Station ဒေတာ ရှာမတွေ့ပါ။ ဖိုင်ထဲရှိ စာသားပုံစံများကို ပြန်စစ်ပါ။")
+                    
+            except Exception as audit_err:
+                st.error(f"ဒေတာတွက်ချက်မှု အမှားအယွင်းရှိနေပါသည် - {audit_err}")
         else:
-            # Engine သို့ ဒေတာများ ပေးပို့တွက်ချက်ခြင်း
-            verifier = DMHForecastVerification(df_forecast, df_observed)
-            summary_df = verifier.calculate_all_modes()
-            
-            if not summary_df.empty:
-                st.markdown("### 📋 ခြုံငုံသုံးသပ်ချက် Accuracy Matrix (All 7 Modes)")
-                # MAE နှင့် RMSE တွင် တန်ဖိုးအနည်းဆုံး (အကောင်းဆုံး) များကို အရောင်ဖျော့ပြသပေးခြင်း
-                st.dataframe(summary_df.style.background_gradient(cmap='Blues', subset=['MAE (°C)', 'RMSE (°C)']))
+            st.info("💡 ဆန်းစစ်ချက်ပြုလုပ်ရန် အထက်ပါနေရာတွင် Forecast CSV နှင့် Observed CSV ဖိုင်နှစ်ခုလုံးကို တင်ပေးပါဗျာ။")
                 
                 # CSV Export Report Button
                 csv_data = summary_df.to_csv().encode('utf-8')
