@@ -14,6 +14,9 @@ class DMHForecastVerification:
 
     def merge_data(self):
         """ ခန့်မှန်းချက်နှင့် မြေပြင်ဒေတာကို Date နှင့် Station အလိုက် ပေါင်းခြင်း """
+        # Date format များကို စိတ်ချရအောင် datetime format ပြောင်းထားခြင်း
+        self.df_forecast['Date'] = pd.to_datetime(self.df_forecast['Date'])
+        self.df_observed['Date'] = pd.to_datetime(self.df_observed['Date'])
         return pd.merge(self.df_forecast, self.df_observed, on=['Date', 'Station'], how='inner')
 
     def calculate_all_modes(self):
@@ -43,10 +46,15 @@ class DMHForecastVerification:
                     "MAE (°C)": round(mae, 2),
                     "RMSE (°C)": round(rmse, 2),
                     "R² Score": round(r2, 3),
-                    "Data Count": len(valid_data)
+                    "Data Count": int(len(valid_data))
                 }
             else:
-                results[mode] = {"MAE (°C)": np.nan, "RMSE (°C)": np.nan, "R² Score": np.nan, "Data Count": 0}
+                results[mode] = {
+                    "MAE (°C)": np.nan, 
+                    "RMSE (°C)": np.nan, 
+                    "R² Score": np.nan, 
+                    "Data Count": 0
+                }
                 
         # DataFrame ပြောင်းလဲပြီး Return ပြန်ပေးခြင်း
         return pd.DataFrame(results).T
