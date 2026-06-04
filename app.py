@@ -32,7 +32,7 @@ def calculate_all_indices(temp_c, rh):
 # --- ၃။ ဘာသာစကားနှင့် စာသားများ (Audit မီနူးပါ ထည့်သွင်းထားပါသည်) ---
 LANG_DATA = {
     "မြန်မာ": {
-        "title": "DMH AI မိုးလေဝသခန်းမှန်းစနစ်",
+        "title": "DMH AI မိုးလေဝသခန်းမှန်းချက်စနစ်",
         "station_label": "🎯 စခန်းအမည်ရွေးချယ်ပါ",
         "view_mode_label": "📊 View Mode",
         "modes": [
