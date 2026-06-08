@@ -209,7 +209,7 @@ if mode_index not in [4, 6]:
     data_pack, status = fetch_weather_generic(lat, lon, tz_active)
     
     if status == "429":
-        st.warning("⚠️ API Call Limit ပြည့်နေသဖြင့် ခန့်မှန်းချက်များ ပြတ်တောက်မှုမရှိစေရန် AI Simulated Dashboard ဖြင့် စဉ်ဆက်မပြတ် ပြသပေးထားပါသည်ဗျာ။")
+        st.warning("⚠️ API Call Limit ပြည့်နေသဖြင့် ခန့်မှန်းချက်များ ပြတ်တောက်မှုမရှိစေရန် AI Simulated Dashboard ဖြင့် ကြည့်ရှုရန်။")
         df_h, df_d = generate_fallback_data(lat, lon)
     elif status == "OK" and data_pack is not None:
         df_h, df_d = data_pack
