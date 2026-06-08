@@ -42,15 +42,18 @@ def generate_fallback_data(base_lat, base_lon):
     wind_hourly = [8 + 4 * np.sin(2 * np.pi * i / 24) for i in range(16 * 24)]
     wind_dir = [180 + np.random.randint(-30, 30) for _ in range(16 * 24)]
     humid_hourly = [75 - 15 * np.sin(2 * np.pi * i / 24) for i in range(16 * 24)]
-    vis_hourly = [10.0 for _ in range(16 * 24)]
-    cloud_hourly = [np.random.randint(2, 7) for _ in range(16 * 24)]
-    thunder_hourly = [np.random.randint(10, 45) for _ in range(16 * 24)]
+    vis_hourly = [10.0 + np.random.normal(0, 1) for _ in range(16 * 24)]
+    cloud_hourly = [np.random.randint(2, 8) for _ in range(16 * 24)]
+    thunder_hourly = [np.random.randint(10, 85) for _ in range(16 * 24)]
     
     df_h = pd.DataFrame({
         "Time": hours, "Temp": temp_hourly, "precipitation": precip_hourly,
-        "Wind": wind_hourly, "WindDir": wind_dir, "Vis": vis_hourly,
-        "Humid": humid_hourly, "Cloud_Oktas": cloud_hourly, "Thunderstorm": thunder_hourly
+        "Wind": wind_hourly, "WindDir": wind_dir, "Vis": [max(1.0, v) for v in vis_hourly],
+        "Humid": [clamped for clamped in [75 - 15 * np.sin(2 * np.pi * i / 24) for i in range(16 * 24)]],
+        "Cloud_Oktas": cloud_hourly, "Thunderstorm": thunder_hourly
     })
+    # Humid bounding box correction
+    df_h['Humid'] = df_h['Humid'].clip(30, 100)
     df_h['HI'], df_h['WBGT'], df_h['UTCI'] = zip(*df_h.apply(lambda x: calculate_all_indices(x['Temp'], x['Humid']), axis=1))
     
     # Daily simulation
@@ -61,7 +64,7 @@ def generate_fallback_data(base_lat, base_lon):
     })
     return df_h, df_d
 
-# --- ၄။ ဘာသာစကားနှင့် စာသားများ (Modes အရေအတွက် မြန်မာ/အင်္ဂလိပ် တညီတညွတ်တည်း ညှိထားသည်) ---
+# --- ၄။ ဘာသာစကားနှင့် စာသားများ ---
 LANG_DATA = {
     "မြန်မာ": {
         "title": "DMH AI မိုးလေဝသခန်းမှန်းချက်စနစ်",
@@ -69,7 +72,7 @@ LANG_DATA = {
         "view_mode_label": "📊 View Mode",
         "modes": [
             "၁၆ ရက်စာ အသေးစိတ်ဆန်းစစ်ချက်", 
-            "အပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", 
+            "अပူချိန်စောင့်ကြည့်ခြင်း (IBF-ကျန်းမာရေး )", 
             "ရာသီဥတုပြောင်းလဲမှု (၂၁၀၀-SSP5-8.5)",
             "Icon Style ခန့်မှန်းချက်",
             "ပင်လယ်ပြင် လှိုင်းအခြေအနေခန့်မှန်းချက်",
@@ -81,9 +84,12 @@ LANG_DATA = {
         "ibf_header": "🏥 ကျန်းမာရေးကဏ္ဍဆိုင်ရာ အကျိုးသက်ရောက်မှုနှင့် အကြံပြုချက်များ",
         "risk_levels": ["Extreme Risk (အလွန်အန္တရာယ်ရှိ)", "High Risk (အန္တရာယ်ရှိ)", "Moderate Risk (သတိပြုရန်)", "Low Risk (ပုံမှန်)"],
         "charts": [
-            "🌡️  ၁။ အပူချိန်(ဒီဂရီဆဲလ်စီးယပ်)", "🌧️ ၂။ မိုးရေချိန်(မီလီမီတာ) ၆ နာရီအတွင်းရွာသွန်းသောပမာဏ",
-            "💨 ၃။ လေတိုက်နှုန်း(mph)နှင့်လေတိုက်ရာအရပ်", "🔭 ၄။ အဝေးမြင်တာ (km)",
-            "💧  ၅။ စိုထိုင်းဆ (%)", "☁️ ၆။ တိမ်ဖုံးမှုပမာဏ (Oktas: 0-8)",
+            "🌡️ ၁။ အပူချိန် (ဒီဂရီဆဲလ်စီးယပ်)", 
+            "🌧️ ၂။ မိုးရေချိန် (မီလီမီတာ) ၆ နာရီအတွင်းရွာသွန်းသောပမာဏ",
+            "💨 ၃။ လေတိုက်နှုန်း (mph) နှင့် လေတိုက်ရာအရပ်", 
+            "🔭 ၄။ အဝေးမြင်တာ (km)",
+            "💧 ၅။ စိုထိုင်းဆ (%)", 
+            "☁️ ၆။ တိမ်ဖုံးမှုပမာဏ (Oktas: 0-8)",
             "⚡ ၇။ မိုးတိမ်တောင်နှင့် လျှပ်စီးလက်နိုင်ခြေ (%)"
         ],
         "impact_list": [
@@ -118,7 +124,15 @@ LANG_DATA = {
         "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
         "ibf_header": "🏥 Health Impacts & Recommendations",
         "risk_levels": ["Extreme Risk", "High Risk", "Moderate Risk", "Low Risk"],
-        "charts": ["🌡️ 1. Temperature(°C)", "🌧️ 2. Precipitation(mm) 6 hourly", "💨 3. Wind Speed (mph) & Direction", "🔭 4. Visibility (km)", "💧 5. Humidity (%)", "☁️ 6. Cloud Cover (Oktas: 0-8)", "⚡ 7. Thunderstorm & Lightning Probability (%)"],
+        "charts": [
+            "🌡️ 1. Temperature (°C)", 
+            "🌧️ 2. Precipitation (mm) 6 hourly", 
+            "💨 3. Wind Speed (mph) & Direction", 
+            "🔭 4. Visibility (km)", 
+            "💧 5. Humidity (%)", 
+            "☁️ 6. Cloud Cover (Oktas: 0-8)", 
+            "⚡ 7. Thunderstorm & Lightning Probability (%)"
+        ],
         "impact_list": ["Extreme danger! Heatstroke possible.", "High danger! Fatigue possible.", "Caution! Sun exposure may cause fatigue.", "Normal conditions."],
         "recom_list": ["Stay indoors. Drink 3-4L water, Follow DMH news for the latest weather updates.", "Work morning/evening only. Use umbrella, Follow DMH news for the latest weather updates.", "Wear light clothes. Rest in shade, Follow DMH news for the latest weather updates.", "Stay hydrated and follow updates, Follow DMH news for the latest weather updates."],
         "marine_region_label": "🌊 Select Coastal Region",
@@ -192,7 +206,7 @@ def fetch_weather_generic(lat, lon, tz_name="Asia/Yangon"):
     except:
         return None, "ERROR"
 
-# --- ၆။ Sidebar UI (ခလုတ်မလိုဘဲ တန်းပြောင်းသော မူလလက်ဟောင်းစနစ်) ---
+# --- ၆။ Sidebar UI ---
 st.sidebar.image(dm_header_logo, width=90)
 lang = st.sidebar.radio("🌐 Language", ["မြန်မာ", "English"], horizontal=True)
 T = LANG_DATA[lang]
@@ -291,21 +305,44 @@ def render_icon_style_forecast(df_hourly):
 if mode_index == 0:
     st.warning(T["dmh_alert"])
     if df_d is not None and df_h is not None:
+        # ၁။ အပူချိန် Graph
         st.subheader(T["charts"][0])
-        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
+        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True, color_discrete_map={'Tmax': 'red', 'Tmin': 'blue'}), use_container_width=True)
         
+        # 6-Hourly Resampling for general meteorology patterns
         df_6h = df_h.set_index('Time').resample('6h').agg({
-            'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
+            'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 'Vis': 'mean', 'Humid': 'mean', 'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
         }).reset_index()
         
+        # ၂။ မိုးရေချိန် Graph
         st.subheader(T["charts"][1])
-        st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation'), use_container_width=True)
+        st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation', color_discrete_sequence=['#2979FF']), use_container_width=True)
         
+        # ၃။ လေတိုက်နှုန်းနှင့် လေတိုက်ရာအရပ် Graph
         st.subheader(T["charts"][2])
         fig_wind = go.Figure()
-        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers', name="Wind Speed (mph)"))
+        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers', name="Wind Speed (mph)", line=dict(color='#00E676')))
         fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red'), name="Direction"))
         st.plotly_chart(fig_wind, use_container_width=True)
+        
+        # ၄။ အဝေးမြင်တာ Graph (Visibility)
+        st.subheader(T["charts"][3])
+        st.plotly_chart(px.line(df_6h, x='Time', y='Vis', markers=True, color_discrete_sequence=['#757575']), use_container_width=True)
+        
+        # ၅။ စိုထိုင်းဆ Graph (Humidity)
+        st.subheader(T["charts"][4])
+        st.plotly_chart(px.line(df_6h, x='Time', y='Humid', markers=True, color_discrete_sequence=['#00ACC1']), use_container_width=True)
+        
+        # ၆။ တိမ်ဖုံးမှုပမာဏ Graph (Cloud Cover)
+        st.subheader(T["charts"][5])
+        st.plotly_chart(px.bar(df_6h, x='Time', y='Cloud_Oktas', color_discrete_sequence=['#90A4AE']), use_container_width=True)
+        
+        # ၇။ မိုးတိမ်တောင်နှင့် လျှပ်စီးလက်နိုင်ခြေ Graph (Thunderstorm Probability)
+        st.subheader(T["charts"][6])
+        st.plotly_chart(px.bar(df_6h, x='Time', y='Thunderstorm', color_discrete_sequence=['#D500F9']), use_container_width=True)
+        
+        # မိုးတိမ်တောင် သတိပေးချက် မှတ်ချက်ထည့်သွင်းခြင်း (Storm Note)
+        st.info(T["storm_note"])
 
 elif mode_index == 1:
     if df_h is not None:
@@ -341,7 +378,7 @@ elif mode_index == 5:
     if df_h is not None:
         render_icon_style_forecast(df_h)
 
-# Mode 6: Model Accuracy Audit Mode (index တိုက်စစ်ထားသည်)
+# Mode 6: Model Accuracy Audit Mode
 elif mode_index == 6:
     st.subheader("📊 DMH Verification & Engine Automation Monitor")
     if DMHForecastVerification is not None:
@@ -355,7 +392,7 @@ elif mode_index == 6:
     else:
         st.warning("⚠️ `verification_engine.py` structure module could not be found or initialized properly inside the root runtime directory.")
 
-# --- ၁၁။ Export Report (Argument အမှား ပြင်ဆင်ပြီးသား) ---
+# --- ၁၁။ Export Report ---
 st.markdown("---")
 if st.button("🚀 Export All Stations Report"):
     all_data = []
@@ -365,10 +402,7 @@ if st.button("🚀 Export All Stations Report"):
             c_lat = MYANMAR_CITIES[city]["lat"]
             c_lon = MYANMAR_CITIES[city]["lon"]
             
-            # generic fetch အတိုင်း လိုအပ်သော Parameter မှန်ကန်စွာပေးပို့ခြင်း
             data_pack, status = fetch_weather_generic(c_lat, c_lon, "Asia/Yangon")
-            
-            # API error တက်ပါက Fallback ဒေတာဖြင့် အစားထိုးမောင်းနှင်ပေးခြင်း
             if status != "OK" or data_pack is None:
                 dh, dd = generate_fallback_data(c_lat, c_lon)
             else:
