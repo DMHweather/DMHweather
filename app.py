@@ -131,8 +131,10 @@ MARINE_STATIONS = {
     }
 }
 
-@st.cache_data(ttl=3600)
+# ကုဒ်အဟောင်းနေရာမှာ အောက်ကအတိုင်း အစားထိုးပြင်ဆင်ပါ -
+@st.cache_data(ttl=7200, max_entries=100) # ၁ နာရီအစား ၂ နာရီ (7200s) တိုးမြှင့်ပြီး စခန်း ၁၀၀ စာကို အမြဲ မှတ်ထားခိုင်းခြင်း
 def fetch_weather_generic(city, source_dict):
+    # ကျန်တဲ့ ကုဒ်တွေက အတူတူပါပဲ...
     if city not in source_dict: 
         return None, None
     loc = source_dict[city]
