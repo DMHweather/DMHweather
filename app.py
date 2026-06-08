@@ -29,6 +29,19 @@ def calculate_all_indices(temp_c, rh):
     utci = temp_c + (0.33 * e) - (0.7 * 0.1) - 4.0
     return round(hi, 1), round(wbgt, 1), round(utci, 1)
 
+# --- DMH Marine Sea State Logic ---
+def get_sea_state(wave_height):
+    if wave_height < 0.5:
+        return "Calm (လှိုင်းငြိမ်)"
+    elif 0.5 <= wave_height < 1.25:
+        return "Slight (လှိုင်းအနည်းငယ်)"
+    elif 1.25 <= wave_height < 2.5:
+        return "Moderate (လှိုင်းအသင့်အတင့်)"
+    elif 2.5 <= wave_height < 4.0:
+        return "Rough (လှိုင်းကြီးနိုင်)"
+    else:
+        return "Very Rough (လှိုင်းအလွန်ကြီးနိုင်)"
+
 # --- ၃။ API ကန့်သတ်ချက်မိပါက အလိုအလျောက် သုံးမည့် အရန်ဒေတာစနစ် (Fallback Demo Data Engine) ---
 def generate_fallback_data(base_lat, base_lon):
     start_time = datetime.now(mm_tz).replace(hour=0, minute=0, second=0, microsecond=0)
@@ -403,34 +416,67 @@ elif mode_index == 4:  # ပင်လယ်ပြင် ကဏ္ဍစစ်စ
             "Wave Height (m)": res_m["hourly"]["wave_height"],
             "Wave Direction (°)": res_m["hourly"].get("wave_direction", [0]*len(res_m["hourly"]["time"]))
         })
-        st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်ခန့်မှန်းချက် ပြသကွက်")
-        st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", markers=True, line_shape="spline", color_discrete_sequence=['#0288D1']), use_container_width=True)
     except:
         st.warning("⚓ ပင်လယ်ပြင် API Limit ပြည့်နေသဖြင့် လှိုင်းခန့်မှန်းချက်အား AI Simulation စနစ်ဖြင့် အစားထိုး တင်ပြပေးထားပါသည်ဗျာ။")
         sim_times = [datetime.now(mm_tz).replace(hour=0,minute=0)+timedelta(hours=i) for i in range(7*24)]
         df_m = pd.DataFrame({
             "Time": sim_times, 
-            "Wave Height (m)": [max(0.5, round(1.2 + 0.5*np.sin(2*np.pi*i/24)+np.random.normal(0,0.1), 2)) for i in range(7*24)],
+            "Wave Height (m)": [max(0.2, round(1.2 + 0.8*np.sin(2*np.pi*i/24)+np.random.normal(0,0.15), 2)) for i in range(7*24)],
             "Wave Direction (°)": [np.random.randint(45, 225) for _ in range(7*24)]
         })
-        st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", markers=True, color_discrete_sequence=['#0288D1']), use_container_width=True)
 
-    # --- ပင်လယ်ပြင်လှိုင်းအမြင့် ရက်အလိုက် ၃ နာရီတစ်ခါ အသေးစိတ်ဒေတာဇယား (Marine Data Table) ---
     if df_m is not None:
-        st.markdown("### 📊 3-Hourly Marine Wave Forecast Comprehensive Table")
+        st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်နှင့် အင်အားအခြေအနေ ခန့်မှန်းချက်")
         
-        # 3-Hourly စနစ်သို့ ပြောင်းလဲရန် Resample လုပ်ခြင်း
+        # --- DMH Threshold Zones Background Graphs ပုံဖော်ခြင်း ---
+        max_h = max(df_m["Wave Height (m)"].max() + 0.5, 4.5)
+        
+        fig_m = go.Figure()
+        
+        # အဆင့်လိုက် Threshold အရောင်လိုင်းများ (Background Color Bands)
+        fig_m.add_hrect(y0=0.0, y1=0.5, fillcolor="rgba(144, 202, 249, 0.2)", line_width=0, annotation_text="Calm (လှိုင်းငြိမ်)", annotation_position="inside left")
+        fig_m.add_hrect(y0=0.5, y1=1.25, fillcolor="rgba(129, 199, 132, 0.25)", line_width=0, annotation_text="Slight (လှိုင်းအနည်းငယ်)", annotation_position="inside left")
+        fig_m.add_hrect(y0=1.25, y1=2.5, fillcolor="rgba(255, 241, 118, 0.3)", line_width=0, annotation_text="Moderate (လှိုင်းအသင့်အတင့်)", annotation_position="inside left")
+        fig_m.add_hrect(y0=2.5, y1=4.0, fillcolor="rgba(255, 183, 77, 0.35)", line_width=0, annotation_text="Rough (လှိုင်းကြီးနိုင်)", annotation_position="inside left")
+        fig_m.add_hrect(y0=4.0, y1=max_h, fillcolor="rgba(229, 115, 115, 0.4)", line_width=0, annotation_text="Very Rough (လှိုင်းအလွန်ကြီးနိုင်)", annotation_position="inside left")
+        
+        # ပင်မလှိုင်းအမြင့် Line Trace
+        fig_m.add_trace(go.Scatter(
+            x=df_m["Time"], 
+            y=df_m["Wave Height (m)"], 
+            mode="lines+markers", 
+            name="Wave Height (m)",
+            line=dict(color="#01579B", width=3),
+            marker=dict(size=4),
+            hovertemplate="<b>Time:</b> %{x}<br><b>Wave Height:</b> %{y} m<br><extra></extra>"
+        ))
+        
+        fig_m.update_layout(
+            xaxis_title="Time / Date",
+            yaxis_title="Wave Height (meters)",
+            yaxis=dict(range=[0, max_h]),
+            hovermode="x unified",
+            margin=dict(t=20, b=20, l=30, r=30),
+            height=500
+        )
+        
+        st.plotly_chart(fig_m, use_container_width=True)
+
+        # --- 3-Hourly Marine Table with Sea State Output ---
+        st.markdown("### 📊 3-Hourly Marine Wave Forecast & Sea State Comprehensive Table")
+        
         df_m_3h = df_m.set_index('Time').resample('3h').agg({
             'Wave Height (m)': 'first',
             'Wave Direction (°)': 'first'
         }).reset_index()
         
-        # စာသားပုံစံ ပြင်ဆင်ခြင်း
+        # လှိုင်းအင်အားကို စံနှုန်းအလိုက် တွက်ချက်ထည့်သွင်းခြင်း
+        df_m_3h['Sea State (လှိုင်းအင်အား)'] = df_m_3h['Wave Height (m)'].apply(get_sea_state)
+        
         df_m_table = df_m_3h.copy()
         df_m_table['Time'] = df_m_table['Time'].dt.strftime('%Y-%m-%d %I:%M %p')
-        df_m_table.columns = ["Time Slot", "Wave Height (meters)", "Wave Direction (Degrees)"]
+        df_m_table.columns = ["Time Slot", "Wave Height (meters)", "Wave Direction (Degrees)", "Sea State (လှိုင်းအင်အားအခြေအနေ)"]
         
-        # Streamlit Table ဖြင့် လှပစွာ ပြသခြင်း
         st.dataframe(df_m_table.set_index("Time Slot"), use_container_width=True)
 
 elif mode_index == 5:
