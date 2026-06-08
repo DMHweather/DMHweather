@@ -305,19 +305,58 @@ if df_h is not None:
 
 # Mode 0: 16-Days Forecast
 if mode_index == 0:
-    st.warning(T["dmh_alert"])
-    
-    # df_d ထဲမှာ တကယ့် ဒေတာတွေ ပါရဲ့လား အရင်စစ်မယ်
-    if df_d is not None and not df_d.empty and 'Tmax' in df_d.columns:
-        st.subheader(T["charts"][0])
-        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
+        st.warning(T["dmh_alert"])
         
-        # ကျန်တဲ့ ဒုတိယ၊ တတိယ Graph တွေကိုလည်း ဒီ if အောက်ထဲမှာပဲ စုထည့်ထားပါ
-        # ဥပမာ- df_6h ဆွဲတဲ့ code တွေ၊ Wind Graph တွေ အကုန်လုံး...
-        
-    else:
-        # ဒေတာ အဆင်မပြေရင် အနီရောင် ကွက်ကြီး မပြဘဲ ဒီစာလေးပဲ ပြပေးပါလိမ့်မယ်
-        st.error("⚠️ API Limit ပြည့်သွားခြင်း သို့မဟုတ် ဒေတာမပြည့်စုံခြင်းကြောင့် Graph မဆွဲနိုင်သေးပါ။ ခေတ္တစောင့်ပြီး Refresh လုပ်ပေးပါ။")
+        # --- ဒီနေရာမှာ စစ်ဆေးတဲ့ ကာကွယ်ရေး Code ကို ပြောင်းလဲလိုက်ပါ ---
+        # df_d သည် None မဟုတ်ရုံတင်မကဘဲ အထဲမှာ data အနည်းဆုံး ၁ ကြောင်း ပါရပါမယ်
+        # ပြီးတော့ 'Tmax' နဲ့ 'Tmin' column နာမည်တွေ တကယ်ပါမှ graph ဆွဲခိုင်းပါမယ်
+        if df_d is not None and not df_d.empty and 'Tmax' in df_d.columns and 'Tmin' in df_d.columns:
+            
+            # ၁။ အပူချိန် Graph
+            st.subheader(T["charts"][0])
+            st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
+
+            # ၂။ ကျန်တဲ့ ၆ နာရီ Resampling Code တွေနဲ့ ကျန်တဲ့ Graph တွေကို ဒီ 'if' ရဲ့ အောက်မှာပဲ ဆက်ရေးပါ
+            df_6h = df_h.set_index('Time').resample('6h').agg({
+                'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 
+                'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
+            }).reset_index()
+
+            # မိုးရေချိန် Graph
+            st.subheader(T["charts"][1])
+            st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation', color_discrete_sequence=['skyblue']), use_container_width=True)
+
+            # လေတိုက်နှုန်း Graph
+            st.subheader(T["charts"][2])
+            fig_wind = go.Figure()
+            fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers', line=dict(color='darkgreen')))
+            fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red')))
+            st.plotly_chart(fig_wind, use_container_width=True)
+
+            # Visibility Graph
+            st.subheader(T["charts"][3])
+            fig4 = px.line(df_h, x='Time', y='Vis', color_discrete_sequence=['gray'])
+            fig4.update_layout(yaxis_title="အဝေးမြင်တာ (km)" if lang == "မြန်မာ" else "Visibility (km)", xaxis_title="အချိန် (Time)")
+            st.plotly_chart(fig4, use_container_width=True)
+
+            # Humidity Graph
+            st.subheader(T["charts"][4])
+            fig5 = px.area(df_h, x='Time', y='Humid', color_discrete_sequence=['purple'])
+            fig5.update_layout(yaxis_title="စိုထိုင်းဆ (%)" if lang == "မြန်မာ" else "Humidity (%)", xaxis_title="အချိန် (Time)")
+            st.plotly_chart(fig5, use_container_width=True)
+
+            # Cloud Graph
+            st.subheader(T["charts"][5])
+            st.plotly_chart(px.bar(df_6h, x='Time', y='Cloud_Oktas', color_discrete_sequence=['lightgreen']), use_container_width=True)
+            
+            # Thunderstorm Graph
+            st.subheader(T["charts"][6])
+            st.error(T["storm_note"])
+            st.plotly_chart(px.bar(df_6h, x='Time', y='Thunderstorm', color_discrete_sequence=['orange']), use_container_width=True)
+
+        else:
+            # တကယ်လို့ ဒေတာ မပြည့်စုံရင် အနီရောင် ကွက်ကြီးမပြတော့ဘဲ ဒီ သတိပေးချက်လေးပဲ ပြပါလိမ့်မယ်
+            st.error("⚠️ လက်ရှိတွင် Open-Meteo API ဒေတာ ရယူနိုင်ခြင်း မရှိသေးပါ။ ခေတ္တစောင့်ဆိုင်းပြီး Refresh ပြုလုပ်ပေးပါ။")
 
     df_6h = df_h.set_index('Time').resample('6h').agg({
         'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 
