@@ -255,13 +255,13 @@ is_simulated = False
 if mode_index not in [4, 6]:
     data_pack, status = fetch_weather_generic(lat, lon, tz_active)
     if status == "429":
-        st.warning("⚠️ AI Simulated Dashboard ဖြင့် အစားထိုးပြသနေပါသည်။")
+        st.warning("⚠️ Weather API Error: 429 Client Error: Too Many Requests! AI Simulated Dashboard ဖြင့် အစားထိုးပြသနေပါသည်။")
         df_h, df_d = generate_fallback_data(lat, lon)
         is_simulated = True
     elif status == "OK" and data_pack is not None:
         df_h, df_d = data_pack
     else:
-        st.warning("⚠️ AI Simulated Dashboard ဖြင့် ပြသထားပါသည်။")
+        st.warning("⚠️ ဒေတာရယူရန် ခေတ္တအခက်အခဲရှိနေသဖြင့် AI Simulated Dashboard ဖြင့် ပြသထားပါသည်။")
         df_h, df_d = generate_fallback_data(lat, lon)
         is_simulated = True
 
@@ -339,7 +339,6 @@ elif mode_index == 1:
         st.subheader(T["ibf_header"])
         idx_choice = st.radio("🌡️ Select Heat Stress Index", ["အမြင့်ဆုံးအပူချိန်", "Heat Index", "WBGT", "UTCI"], horizontal=True)
         
-        # ကိန်းဂဏန်းများ တိကျစွာ ရွေးချယ်ခြင်း
         if idx_choice == "Heat Index":
             val = float(df_h.iloc[0]['HI'])
         elif idx_choice == "WBGT":
@@ -351,7 +350,6 @@ elif mode_index == 1:
             
         st.metric(label=idx_choice, value=f"{val:.1f} °C")
         
-        # --- IBF Risk Levels & Threshold Logic ဖြင့် ခွဲခြားခြင်း ---
         if val >= 41.0:
             status_color, risk_text, impact, recom = "#D50000", T["risk_levels"][0], T["impact_list"][0], T["recom_list"][0]
         elif 35.0 <= val < 41.0:
@@ -361,7 +359,6 @@ elif mode_index == 1:
         else:
             status_color, risk_text, impact, recom = "#00C853", T["risk_levels"][3], T["impact_list"][3], T["recom_list"][3]
             
-        # UI ကတ်များဖြင့် ပေါ်လွင်အောင် ပြသခြင်း
         st.markdown(f"""
         <div style='background-color: {status_color}; padding: 15px; border-radius: 8px; color: white; font-weight: bold; font-size: 1.2em; text-align: center; margin-bottom: 20px;'>
             ⚠️ လက်ရှိအခြေအနေအဆင့် - {risk_text}
@@ -395,18 +392,46 @@ elif mode_index == 3:
     if df_h is not None:
         render_icon_style_forecast(df_h)
 
-elif mode_index == 4:
+elif mode_index == 4:  # ပင်လယ်ပြင် ကဏ္ဍစစ်စစ် (Marine Mode)
     marine_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&hourly=wave_height,wave_direction&timezone=Asia/Yangon"
+    df_m = None
+    
     try:
         res_m = requests.get(marine_url, timeout=12).json()
-        df_m = pd.DataFrame({"Time": pd.to_datetime(res_m["hourly"]["time"]), "Wave Height (m)": res_m["hourly"]["wave_height"]})
-        st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်ခန့်မှန်းချက်")
-        st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", markers=True, line_shape="spline"), use_container_width=True)
+        df_m = pd.DataFrame({
+            "Time": pd.to_datetime(res_m["hourly"]["time"]), 
+            "Wave Height (m)": res_m["hourly"]["wave_height"],
+            "Wave Direction (°)": res_m["hourly"].get("wave_direction", [0]*len(res_m["hourly"]["time"]))
+        })
+        st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်ခန့်မှန်းချက် ပြသကွက်")
+        st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", markers=True, line_shape="spline", color_discrete_sequence=['#0288D1']), use_container_width=True)
     except:
-        st.warning("⚓ ပင်လယ်ပြင် API Limit ပြည့်နေသဖြင့် လှိုင်းခန့်မှန်းချက်အား AI Simulation စနစ်ဖြင့် အစားထိုးခြင်း။")
+        st.warning("⚓ ပင်လယ်ပြင် API Limit ပြည့်နေသဖြင့် လှိုင်းခန့်မှန်းချက်အား AI Simulation စနစ်ဖြင့် အစားထိုး တင်ပြပေးထားပါသည်ဗျာ။")
         sim_times = [datetime.now(mm_tz).replace(hour=0,minute=0)+timedelta(hours=i) for i in range(7*24)]
-        df_m_sim = pd.DataFrame({"Time": sim_times, "Wave Height (m)": [max(0.5, 1.2 + 0.5*np.sin(2*np.pi*i/24)+np.random.normal(0,0.1)) for i in range(7*24)]})
-        st.plotly_chart(px.line(df_m_sim, x="Time", y="Wave Height (m)", markers=True), use_container_width=True)
+        df_m = pd.DataFrame({
+            "Time": sim_times, 
+            "Wave Height (m)": [max(0.5, round(1.2 + 0.5*np.sin(2*np.pi*i/24)+np.random.normal(0,0.1), 2)) for i in range(7*24)],
+            "Wave Direction (°)": [np.random.randint(45, 225) for _ in range(7*24)]
+        })
+        st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", markers=True, color_discrete_sequence=['#0288D1']), use_container_width=True)
+
+    # --- ပင်လယ်ပြင်လှိုင်းအမြင့် ရက်အလိုက် ၃ နာရီတစ်ခါ အသေးစိတ်ဒေတာဇယား (Marine Data Table) ---
+    if df_m is not None:
+        st.markdown("### 📊 3-Hourly Marine Wave Forecast Comprehensive Table")
+        
+        # 3-Hourly စနစ်သို့ ပြောင်းလဲရန် Resample လုပ်ခြင်း
+        df_m_3h = df_m.set_index('Time').resample('3h').agg({
+            'Wave Height (m)': 'first',
+            'Wave Direction (°)': 'first'
+        }).reset_index()
+        
+        # စာသားပုံစံ ပြင်ဆင်ခြင်း
+        df_m_table = df_m_3h.copy()
+        df_m_table['Time'] = df_m_table['Time'].dt.strftime('%Y-%m-%d %I:%M %p')
+        df_m_table.columns = ["Time Slot", "Wave Height (meters)", "Wave Direction (Degrees)"]
+        
+        # Streamlit Table ဖြင့် လှပစွာ ပြသခြင်း
+        st.dataframe(df_m_table.set_index("Time Slot"), use_container_width=True)
 
 elif mode_index == 5:
     if df_h is not None:
