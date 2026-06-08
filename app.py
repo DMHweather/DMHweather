@@ -106,7 +106,6 @@ def load_stations():
 MYANMAR_CITIES = load_stations()
 city_list = sorted(list(MYANMAR_CITIES.keys()))
 
-# 💡 ဤနေရာတွင် ထားဝယ် (Dawei) ၏ 'lon' သတ်မှတ်ချက်ကို အမှန်ပြင်ဆင်ထားပါသည်
 MARINE_STATIONS = {
     "ရခိုင်ကမ်းရိုးတန်းဒေသ (Rakhine Coast)": {
         "မောင်တော (Maungdaw)": {"lat": 20.82, "lon": 92.36},
@@ -275,10 +274,19 @@ def render_icon_style_forecast(df_hourly):
 # --- ၇။ Main App Modes Display Logic ---
 if mode_index == 0:
     st.warning(T["dmh_alert"])
-    if df_d is not None:
+    if df_d is not None and df_h is not None:
         st.subheader(T["charts"][0])
         st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
-        df_6h = df_h.set_index('Time').resample('6h').agg({'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 'Cloud_Oktas': 'max', 'Thunderstorm': 'max'}).reset_index()
+        
+        # စာကြောင်းအကွာအဝေး (Indentation) အား ဤနေရာတွင် အသေအချာ ပြန်ညှိထားပါသည်
+        df_6h = df_h.set_index('Time').resample('6h').agg({
+            'precipitation': 'sum', 
+            'Wind': 'mean', 
+            'WindDir': 'mean', 
+            'Cloud_Oktas': 'max', 
+            'Thunderstorm': 'max'
+        }).reset_index()
+        
         st.subheader(T["charts"][1])
         st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation'), use_container_width=True)
         st.subheader(T["charts"][2])
@@ -287,7 +295,7 @@ if mode_index == 0:
         fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red')))
         st.plotly_chart(fig_wind, use_container_width=True)
     else:
-        st.warning("👈 ဘယ်ဘက်က 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
+        st.warning("👈 ဘယ်ဘက်အောက်ခြေက 'တည်နေရာရွေးချယ်ရန် ပုံစံ' ထဲမှာ မြို့ရွေးပြီး 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
 
 elif mode_index == 1:
     if df_h is not None:
@@ -297,7 +305,7 @@ elif mode_index == 1:
         val = t_now['HI'] if idx_choice == "Heat Index" else t_now['Temp']
         st.metric(label=idx_choice, value=f"{val:.1f} °C")
     else:
-        st.warning("👈 ဘယ်ဘက်က 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
+        st.warning("👈 ဘယ်ဘက်အောက်ခြေက 'တည်နေရာရွေးချယ်ရန် ပုံစံ' ထဲမှာ မြို့ရွေးပြီး 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
 
 elif mode_index == 2:
     st.subheader("🌡️ Future Climate Projection (SSP5-8.5)")
@@ -309,15 +317,13 @@ elif mode_index == 3:
     if df_h is not None:
         render_icon_style_forecast(df_h)
     else:
-        st.warning("👈 ဘယ်ဘက်က 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
+        st.warning("👈 ဘယ်ဘက်အောက်ခြေက 'တည်နေရာရွေးချယ်ရန် ပုံစံ' ထဲမှာ မြို့ရွေးပြီး 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
 
 elif mode_index == 4:  # Marine Mode
-    # 💡 ဤနေရာရှိ active_dict မှန်ကန်စွာအလုပ်လုပ်ရန်အတွက် Form submission မရှိသေးပါက Default အနေဖြင့် တန်ဖိုးတစ်ခုသတ်မှတ်ပေးပါသည်
     try:
         lat = active_dict[selected_city]["lat"]
         lon = active_dict[selected_city]["lon"]
     except KeyError:
-        # Fallback to first available marine station if city not found initially
         first_region = list(MARINE_STATIONS.keys())[0]
         first_city = list(MARINE_STATIONS[first_region].keys())[0]
         lat = MARINE_STATIONS[first_region][first_city]["lat"]
@@ -335,7 +341,7 @@ elif mode_index == 5:
     if df_h is not None:
         render_icon_style_forecast(df_h)
     else:
-        st.warning("👈 ဘယ်ဘက်က 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
+        st.warning("👈 ဘယ်ဘက်အောက်ခြေက 'တည်နေရာရွေးချယ်ရန် ပုံစံ' ထဲမှာ မြို့ရွေးပြီး 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
 
 elif mode_index == 6:  # Verification Engine
     st.subheader("📊 Model Accuracy Audit")
