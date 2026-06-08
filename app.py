@@ -29,7 +29,7 @@ def calculate_all_indices(temp_c, rh):
     utci = temp_c + (0.33 * e) - (0.7 * 0.1) - 4.0
     return round(hi, 1), round(wbgt, 1), round(utci, 1)
 
-# --- ၃။ ဘာသာစကားနှင့် စာသားများ (Audit မီနူးပါ ထည့်သွင်းထားပါသည်) ---
+# --- ၃။ ဘာသာစကားနှင့် စာသားများ ---
 LANG_DATA = {
     "မြန်မာ": {
         "title": "DMH AI မိုးလေဝသခန်းမှန်းချက်စနစ်",
@@ -305,87 +305,53 @@ if df_h is not None:
 
 # Mode 0: 16-Days Forecast
 if mode_index == 0:
-        st.warning(T["dmh_alert"])
-        
-        # --- ဒီနေရာမှာ စစ်ဆေးတဲ့ ကာကွယ်ရေး Code ကို ပြောင်းလဲလိုက်ပါ ---
-        # df_d သည် None မဟုတ်ရုံတင်မကဘဲ အထဲမှာ data အနည်းဆုံး ၁ ကြောင်း ပါရပါမယ်
-        # ပြီးတော့ 'Tmax' နဲ့ 'Tmin' column နာမည်တွေ တကယ်ပါမှ graph ဆွဲခိုင်းပါမယ်
-        if df_d is not None and not df_d.empty and 'Tmax' in df_d.columns and 'Tmin' in df_d.columns:
-            
-            # ၁။ အပူချိန် Graph
-            st.subheader(T["charts"][0])
-            st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
-
-            # ၂။ ကျန်တဲ့ ၆ နာရီ Resampling Code တွေနဲ့ ကျန်တဲ့ Graph တွေကို ဒီ 'if' ရဲ့ အောက်မှာပဲ ဆက်ရေးပါ
-            df_6h = df_h.set_index('Time').resample('6h').agg({
-                'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 
-                'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
-            }).reset_index()
-
-            # မိုးရေချိန် Graph
-            st.subheader(T["charts"][1])
-            st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation', color_discrete_sequence=['skyblue']), use_container_width=True)
-
-            # လေတိုက်နှုန်း Graph
-            st.subheader(T["charts"][2])
-            fig_wind = go.Figure()
-            fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers', line=dict(color='darkgreen')))
-            fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red')))
-            st.plotly_chart(fig_wind, use_container_width=True)
-
-            # Visibility Graph
-            st.subheader(T["charts"][3])
-            fig4 = px.line(df_h, x='Time', y='Vis', color_discrete_sequence=['gray'])
-            fig4.update_layout(yaxis_title="အဝေးမြင်တာ (km)" if lang == "မြန်မာ" else "Visibility (km)", xaxis_title="အချိန် (Time)")
-            st.plotly_chart(fig4, use_container_width=True)
-
-            # Humidity Graph
-            st.subheader(T["charts"][4])
-            fig5 = px.area(df_h, x='Time', y='Humid', color_discrete_sequence=['purple'])
-            fig5.update_layout(yaxis_title="စိုထိုင်းဆ (%)" if lang == "မြန်မာ" else "Humidity (%)", xaxis_title="အချိန် (Time)")
-            st.plotly_chart(fig5, use_container_width=True)
-
-            # Cloud Graph
-            st.subheader(T["charts"][5])
-            st.plotly_chart(px.bar(df_6h, x='Time', y='Cloud_Oktas', color_discrete_sequence=['lightgreen']), use_container_width=True)
-            
-            # Thunderstorm Graph
-            st.subheader(T["charts"][6])
-            st.error(T["storm_note"])
-            st.plotly_chart(px.bar(df_6h, x='Time', y='Thunderstorm', color_discrete_sequence=['orange']), use_container_width=True)
-
-        else:
-            # တကယ်လို့ ဒေတာ မပြည့်စုံရင် အနီရောင် ကွက်ကြီးမပြတော့ဘဲ ဒီ သတိပေးချက်လေးပဲ ပြပါလိမ့်မယ်
-            st.error("⚠️ လက်ရှိတွင် Open-Meteo API ဒေတာ ရယူနိုင်ခြင်း မရှိသေးပါ။ ခေတ္တစောင့်ဆိုင်းပြီး Refresh ပြုလုပ်ပေးပါ။")
-
-    df_6h = df_h.set_index('Time').resample('6h').agg({
-        'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 
-        'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
-    }).reset_index()
-
-    st.subheader(T["charts"][1])
-    st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation', color_discrete_sequence=['green']), use_container_width=True)
-
-    st.subheader(T["charts"][2])
-    fig_wind = go.Figure()
-    fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers', line=dict(color='darkgreen')))
-    fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red')))
-    st.plotly_chart(fig_wind, use_container_width=True)
-
-    st.subheader(T["charts"][3])
-    fig4 = px.line(df_h, x='Time', y='Vis', color_discrete_sequence=['gray'])
-    st.plotly_chart(fig4, use_container_width=True)
-
-    st.subheader(T["charts"][4])
-    fig5 = px.area(df_h, x='Time', y='Humid', color_discrete_sequence=['purple'])
-    st.plotly_chart(fig5, use_container_width=True)
-
-    st.subheader(T["charts"][5])
-    st.plotly_chart(px.bar(df_6h, x='Time', y='Cloud_Oktas', color_discrete_sequence=['lightgreen']), use_container_width=True)
+    st.warning(T["dmh_alert"])
     
-    st.subheader(T["charts"][6])
-    st.error(T["storm_note"])
-    st.plotly_chart(px.bar(df_6h, x='Time', y='Thunderstorm', color_discrete_sequence=['orange']), use_container_width=True)
+    if df_d is not None and not df_d.empty and 'Tmax' in df_d.columns and 'Tmin' in df_d.columns:
+        # ၁။ အပူချိန် Graph
+        st.subheader(T["charts"][0])
+        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
+
+        # ၆ နာရီအလိုက် Data Resampling ပြုလုပ်ခြင်း
+        df_6h = df_h.set_index('Time').resample('6h').agg({
+            'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 
+            'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
+        }).reset_index()
+
+        # ၂။ မိုးရေချိန် Graph
+        st.subheader(T["charts"][1])
+        st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation', color_discrete_sequence=['skyblue']), use_container_width=True)
+
+        # ၃။ လေတိုက်နှုန်း Graph
+        st.subheader(T["charts"][2])
+        fig_wind = go.Figure()
+        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers', line=dict(color='darkgreen')))
+        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red')))
+        st.plotly_chart(fig_wind, use_container_width=True)
+
+        # ၄။ Visibility Graph
+        st.subheader(T["charts"][3])
+        fig4 = px.line(df_h, x='Time', y='Vis', color_discrete_sequence=['gray'])
+        fig4.update_layout(yaxis_title="အဝေးမြင်တာ (km)" if lang == "မြန်မာ" else "Visibility (km)", xaxis_title="အချိန် (Time)")
+        st.plotly_chart(fig4, use_container_width=True)
+
+        # ၅။ Humidity Graph
+        st.subheader(T["charts"][4])
+        fig5 = px.area(df_h, x='Time', y='Humid', color_discrete_sequence=['purple'])
+        fig5.update_layout(yaxis_title="စိုထိုင်းဆ (%)" if lang == "မြန်မာ" else "Humidity (%)", xaxis_title="အချိန် (Time)")
+        st.plotly_chart(fig5, use_container_width=True)
+
+        # ၆။ Cloud Graph
+        st.subheader(T["charts"][5])
+        st.plotly_chart(px.bar(df_6h, x='Time', y='Cloud_Oktas', color_discrete_sequence=['lightgreen']), use_container_width=True)
+        
+        # ၇။ Thunderstorm Graph
+        st.subheader(T["charts"][6])
+        st.error(T["storm_note"])
+        st.plotly_chart(px.bar(df_6h, x='Time', y='Thunderstorm', color_discrete_sequence=['orange']), use_container_width=True)
+
+    else:
+        st.error("⚠️ လက်ရှိတွင် Open-Meteo API ဒေတာ ရယူနိုင်ခြင်း မရှိသေးပါ။ ခေတ္တစောင့်ဆိုင်းပြီး Refresh ပြုလုပ်ပေးပါ။")
 
 # Mode 1: Heatwave Monitoring
 elif mode_index == 1:
@@ -540,28 +506,6 @@ elif mode_index == 4:
             </div>
             """, unsafe_allow_html=True)
 
-        st.markdown("<div style='clear: both;'></div><br>", unsafe_allow_html=True)
-            
-        st.subheader("📊 အချိန်အလိုက် လှိုင်းအမြင့် ပြောင်းလဲမှုလှိုင်းဇယား" if lang == "မြန်မာ" else "📊 Hourly Wave Height Trend Chart")
-        
-        fig_m = px.line(df_marine, x="DateTime", y="Wave Height (m)", 
-                        title=f"{selected_city} - 7-Day Hourly Wave Height Timeline",
-                        labels={"Wave Height (m)": "လှိုင်းအမြင့် - မီတာ (m)" if lang == "မြန်မာ" else "Wave Height (m)", "DateTime": "နေ့ရက်/အချိန် (Time)"},
-                        template="plotly_white")
-        
-        fig_m.update_traces(line_shape='spline', line_smoothing=1.3, line_color="#1f77b4")
-        fig_m.add_hline(y=0.5, line_dash="dot", line_color="#28a745", line_width=1.5, annotation_text="Slight Sea", annotation_position="top right")
-        fig_m.add_hline(y=1.25, line_dash="dot", line_color="#b58600", line_width=1.5, annotation_text="Moderate Sea", annotation_position="top right")
-        fig_m.add_hline(y=2.5, line_dash="dot", line_color="#fd7e14", line_width=1.5, annotation_text="Rough Sea", annotation_position="top right")
-        fig_m.add_hline(y=4.0, line_dash="dot", line_color="#dc3545", line_width=1.5, annotation_text="Very Rough", annotation_position="top right")
-        fig_m.update_yaxes(range=[0, 4.5])
-        st.plotly_chart(fig_m, use_container_width=True)
-        
-        with st.expander("📋 အသေးစိတ် ပင်လယ်ပြင် တစ်နာရီချင်းစီအလိုက် ဒေတာဇယား" if lang == "မြန်မာ" else "📋 Detailed Hourly Marine Data Table"):
-            df_marine_disp = df_marine.copy()
-            df_marine_disp['DateTime'] = df_marine_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
-            st.dataframe(df_marine_disp.set_index("DateTime"), use_container_width=True)
-            
     except Exception as em:
         st.error(f"ပင်လယ်ပြင် API ချိတ်ဆက်မှု အဆင်မပြေပါ - {em}")
 
@@ -579,79 +523,56 @@ elif mode_index == 5:
 
 # Mode 6: Air Quality Forecast Integration
 elif mode_index == 6:
-    header_text = "😷 ၅ ရက်စာ လေထုအရည်အသွေးနှင့် အမှုန်အမွှား ခန့်မှန်းချက်" if lang == "မြန်မာ" else "😷 5-Day Air Quality Forecast System"
+    header_text = "😷 ၅ ရက်စာ လေထုအရည်အသွေးနှင့် အမှုန်အမွှား ခန့်မှန်းချက်" if lang == "မြန်မာ" else "😷 5-Day Air Quality Forecast Dashboard"
     st.subheader(header_text)
     
     lat = active_dict[selected_city]["lat"]
     lon = active_dict[selected_city]["lon"]
-    
-    aq_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&hourly=pm2_5,pm10,ozone,nitrogen_dioxide,european_aqi&timezone=Asia/Yangon"
+    aq_url = f"https://air-quality-api.open-meteo.com/v1/air-quality?latitude={lat}&longitude={lon}&hourly=pm2_5,pm10,european_aqi&timezone=Asia%2FYangon"
     
     try:
-        with st.spinner("လေထုအရည်အသွေး ဒေတာများ တွက်ချက်နေပါသည်..."):
-            r_aq = requests.get(aq_url, timeout=30)
-            r_aq.raise_for_status()
-            res_aq = r_aq.json()
-            hourly_aq = res_aq["hourly"]
-            
+        with st.spinner("လေထုအရည်အသွေးဆိုင်ရာ ဒေတာများရယူနေပါသည်..."):
+            r_aq = requests.get(aq_url, timeout=20).json()
             df_aq = pd.DataFrame({
-                "DateTime": pd.to_datetime(hourly_aq["time"]),
-                "PM2.5 (μg/m³)": hourly_aq["pm2_5"],
-                "PM10 (μg/m³)": hourly_aq["pm10"],
-                "Ozone (μg/m³)": hourly_aq["ozone"],
-                "NO2 (μg/m³)": hourly_aq["nitrogen_dioxide"],
-                "AQI_Index": hourly_aq["european_aqi"]
+                "Time": pd.to_datetime(r_aq["hourly"]["time"]),
+                "PM2.5": r_aq["hourly"]["pm2_5"],
+                "PM10": r_aq["hourly"]["pm10"],
+                "AQI": r_aq["hourly"]["european_aqi"]
             })
-            
-        def get_aqi_status(aqi):
-            if pd.isna(aqi): return "⚪ ဒေတာမရှိပါ"
-            if lang == "မြန်မာ":
-                if aqi <= 20: return "🟢 ကောင်းမွန်သည် (Good)"
-                elif aqi <= 40: return "🟡 အသင့်အတင့် (Fair)"
-                elif aqi <= 60: return "🟠 မကျန်းမာနိုင်သော အခြေအနေ (Moderate)"
-                elif aqi <= 80: return "🔴 ကျန်းမာရေး ထိခိုက်နိုင်သည် (Poor)"
-                else: return "🟣 အလွန်အန္တရာယ်ကြီးသည် (Very Poor)"
-            else:
-                if aqi <= 20: return "🟢 Good"
-                elif aqi <= 40: return "🟡 Fair"
-                elif aqi <= 60: return "🟠 Moderate"
-                elif aqi <= 80: return "🔴 Poor"
-                else: return "🟣 Very Poor"
+        
+        current_aq = df_aq.iloc[0]
+        aqi_val = current_aq["AQI"]
+        
+        if aqi_val <= 20: aq_msg, aq_color = "🟢 ကောင်းမွန် (Good)", "#28a745"
+        elif aqi_val <= 40: aq_msg, aq_color = "🟡 သင့်တင့် (Fair)", "#ffc107"
+        elif aqi_val <= 60: aq_msg, aq_color = "🟠 မကျန်းမာနိုင်သူများအတွက်သတိပြုရန် (Moderate)", "#fd7e14"
+        else: aq_msg, aq_color = "🔴 ကျန်းမာရေးထိခိုက်နိုင်ခြေရှိ (Poor / Hazardous)", "#dc3545"
+        
+        st.markdown(f"""
+            <div style='background-color:{aq_color}; color:white; padding:15px; border-radius:8px; text-align:center;'>
+                <h4>လက်ရှိ လေထုအရည်အသွေးအခြေအနေ: {aq_msg}</h4>
+                <p style='margin:0; font-size:1.2em;'>European AQI Index Value: <b>{aqi_val}</b></p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.plotly_chart(px.line(df_aq, x="Time", y=["PM2.5", "PM10"], title="Particulate Matter (µg/m³) Trend Line"), use_container_width=True)
+        
+    except Exception as e_aq:
+        st.error(f"Air Quality API ချိတ်ဆက်မှု အမှားအယွင်းရှိနေပါသည်: {e_aq}")
 
-        now_sgt = pd.Timestamp.now(tz="Asia/Yangon").tz_localize(None)
-        idx_closest = (df_aq["DateTime"] - now_sgt).abs().idxmin()
-        
-        current_aqi = df_aq["AQI_Index"].iloc[idx_closest]
-        current_pm25 = df_aq["PM2.5 (μg/m³)"].iloc[idx_closest]
-        current_pm10 = df_aq["PM10 (μg/m³)"].iloc[idx_closest]
-        
-        aqi_status = get_aqi_status(current_aqi)
-        st.info(f"📍 **{selected_city}** | {aqi_status}")
-        
-        aq_col1, aq_col2, aq_col3 = st.columns(3)
-        with aq_col1:
-            st.metric(label="European AQI Index", value=f"{current_aqi}")
-        with aq_col2:
-            st.metric(label="PM2.5 Level", value=f"{current_pm25} μg/m³")
-        with aq_col3:
-            st.metric(label="PM10 Level", value=f"{current_pm10} μg/m³")
-            
-        st.subheader("📊 ၅ ရက်စာ လေထုညစ်ညမ်းမှု အညွှန်းကိန်း ပြောင်းလဲမှုဇယား")
-        fig_aq = px.line(df_aq, x="DateTime", y=["PM2.5 (μg/m³)", "PM10 (μg/m³)", "Ozone (μg/m³)", "NO2 (μg/m³)"],
-                        title=f"{selected_city} - 5-Day Pollutants Timeline",
-                        labels={"DateTime": "နေ့ရက်/အချိန် (Time)", "value": "ပမာဏ (μg/m³)"},
-                        template="plotly_white")
-            
-        fig_aq.update_traces(line_shape='spline', line_smoothing=1.1)
-        st.plotly_chart(fig_aq, use_container_width=True)
-            
-        with st.expander("📋 အသေးစိတ် လေထုအရည်အသွေး တစ်နာရီချင်းစီအလိုက် ဒေတာဇယား"):
-            df_aq_disp = df_aq.copy()
-            df_aq_disp['DateTime'] = df_aq_disp['DateTime'].dt.strftime('%Y-%m-%d %H:%M')
-            st.dataframe(df_aq_disp.set_index("DateTime"), use_container_width=True)
-                
-    except Exception as eaq:
-        st.error(f"လေထုအရည်အသွေး API ချိတ်ဆက်မှု အဆင်မပြေပါ - {eaq}")
+# Mode 7: Model Accuracy Audit Mode
+elif mode_index == 7:
+    st.subheader("📊 DMH Verification & Engine Automation Monitor")
+    if DMHForecastVerification is not None:
+        try:
+            verifier = DMHForecastVerification()
+            metrics_df = verifier.calculate_accuracy_metrics()
+            st.write("### 📈 Model Accuracy Metrics Overview")
+            st.dataframe(metrics_df, use_container_width=True)
+        except Exception as audit_err:
+            st.error(f"Verification Engine Run Error: {audit_err}")
+    else:
+        st.warning("⚠️ `verification_engine.py` structure module could not be found or initialized properly inside the root runtime directory.")
 
                 
 # --- ၈။ Export Report ---
