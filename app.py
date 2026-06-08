@@ -61,7 +61,7 @@ def generate_fallback_data(base_lat, base_lon):
     })
     return df_h, df_d
 
-# --- ၄။ ဘာသာစကားနှင့် စာသားများ (Air Quality ကဏ္ဍ လုံးဝဖြုတ်ထားသည်) ---
+# --- ၄။ ဘာသာစကားနှင့် စာသားများ (Modes အရေအတွက် မြန်မာ/အင်္ဂလိပ် တညီတညွတ်တည်း ညှိထားသည်) ---
 LANG_DATA = {
     "မြန်မာ": {
         "title": "DMH AI မိုးလေဝသခန်းမှန်းချက်စနစ်",
@@ -76,7 +76,7 @@ LANG_DATA = {
             "နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ ရှာဖွေရန်",
             "Model Accuracy Audit 📊"
         ], 
-         "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
+        "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
         "storm_note": "📝 မှတ်ချက်: မိုးတိမ်တောင် ဖြစ်နိုင်ခြေ ၆၀% ထက်ကျော်လွန်ပါက လေပြင်းတိုက်ခတ်ခြင်း၊ မိုးကြိုးပစ်ခြင်းနှင့် လျှပ်စီးလက်ခြင်းများ ဖြစ်ပေါ်နိုင်သဖြင့် ဂရုပြုရန် လိုအပ်ပါသည်။",
         "ibf_header": "🏥 ကျန်းမာရေးကဏ္ဍဆိုင်ရာ အကျိုးသက်ရောက်မှုနှင့် အကြံပြုချက်များ",
         "risk_levels": ["Extreme Risk (အလွန်အန္တရာယ်ရှိ)", "High Risk (အန္တရာယ်ရှိ)", "Moderate Risk (သတိပြုရန်)", "Low Risk (ပုံမှန်)"],
@@ -112,7 +112,6 @@ LANG_DATA = {
             "Icon Style Forecast",
             "Marine Wave Forecast",
             "Global & Custom Coordinates Search",
-            "Air Quality Forecast",
             "Model Accuracy Audit 📊"
         ],
         "dmh_alert":  "📢 Tip: Follow DMH news for the latest weather updates.",
@@ -173,7 +172,7 @@ def fetch_weather_generic(lat, lon, tz_name="Asia/Yangon"):
         r.raise_for_status()
         res = r.json()
         
-       df_h = pd.DataFrame({
+        df_h = pd.DataFrame({
             "Time": pd.to_datetime(res['hourly']['time']), 
             "Temp": res['hourly']['temperature_2m'],
             "precipitation": res['hourly']['precipitation'],
@@ -333,7 +332,6 @@ elif mode_index == 4:  # ပင်လယ်ပြင် ကဏ္ဍစစ်စ
         st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်ခန့်မှန်းချက် ပြသကွက်")
         st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", markers=True, line_shape="spline"), use_container_width=True)
     except:
-        # Marine API ခေါ်မရပါကလည်း လှိုင်းအမြင့် အရန်ဒေတာဖြင့် ဆွဲပေးခြင်း
         st.warning("⚓ ပင်လယ်ပြင် API Limit ပြည့်နေသဖြင့် လှိုင်းခန့်မှန်းချက်အား AI Simulation စနစ်ဖြင့် အစားထိုး တင်ပြပေးထားပါသည်ဗျာ။")
         sim_times = [datetime.now(mm_tz).replace(hour=0,minute=0)+timedelta(hours=i) for i in range(7*24)]
         df_m_sim = pd.DataFrame({"Time": sim_times, "Wave Height (m)": [max(0.5, 1.2 + 0.5*np.sin(2*np.pi*i/24)+np.random.normal(0,0.1)) for i in range(7*24)]})
@@ -343,13 +341,8 @@ elif mode_index == 5:
     if df_h is not None:
         render_icon_style_forecast(df_h)
 
+# Mode 6: Model Accuracy Audit Mode (index တိုက်စစ်ထားသည်)
 elif mode_index == 6:
-    st.subheader("📊 Model Accuracy Audit")
-    if DMHForecastVerification is not None: st.success("Verification Engine Active.")
-    else: st.warning("Verification Module Missing.")
-
-# Mode 7: Model Accuracy Audit Mode
-elif mode_index == 7:
     st.subheader("📊 DMH Verification & Engine Automation Monitor")
     if DMHForecastVerification is not None:
         try:
@@ -362,32 +355,43 @@ elif mode_index == 7:
     else:
         st.warning("⚠️ `verification_engine.py` structure module could not be found or initialized properly inside the root runtime directory.")
 
-                
-# --- ၈။ Export Report ---
+# --- ၁၁။ Export Report (Argument အမှား ပြင်ဆင်ပြီးသား) ---
 st.markdown("---")
 if st.button("🚀 Export All Stations Report"):
     all_data = []
     p_bar = st.progress(0)
     for i, city in enumerate(city_list):
-        dh, dd = fetch_weather_generic(city, MYANMAR_CITIES)
-        if dh is not None and dd is not None:
-            for d in dd['Date']:
-                t_930 = d + pd.Timedelta(hours=9, minutes=30)
-                y_930 = t_930 - pd.Timedelta(days=1)
-                rain_24h = dh.loc[(dh['Time'] > y_930) & (dh['Time'] <= t_930), 'precipitation'].sum()
-                day_indices = dh[dh['Time'].dt.date == d.date()]
+        if city in MYANMAR_CITIES:
+            c_lat = MYANMAR_CITIES[city]["lat"]
+            c_lon = MYANMAR_CITIES[city]["lon"]
+            
+            # generic fetch အတိုင်း လိုအပ်သော Parameter မှန်ကန်စွာပေးပို့ခြင်း
+            data_pack, status = fetch_weather_generic(c_lat, c_lon, "Asia/Yangon")
+            
+            # API error တက်ပါက Fallback ဒေတာဖြင့် အစားထိုးမောင်းနှင်ပေးခြင်း
+            if status != "OK" or data_pack is None:
+                dh, dd = generate_fallback_data(c_lat, c_lon)
+            else:
+                dh, dd = data_pack
                 
-                # Check to prevent empty data max errors
-                max_hi = day_indices['HI'].max() if not day_indices.empty else np.nan
-                max_wbgt = day_indices['WBGT'].max() if not day_indices.empty else np.nan
-                
-                all_data.append({
-                    'Date': d.strftime('%Y-%m-%d'), 'Station': city,
-                    'Max_Temp': round(dd.loc[dd['Date'] == d, 'Tmax'].values[0] + bias, 1),
-                    'Max_HeatIndex': max_hi,
-                    'Max_WBGT': max_wbgt,
-                    'Rain_24h': round(rain_24h, 2)
-                })
+            if dh is not None and dd is not None:
+                for d in dd['Date']:
+                    t_930 = d + pd.Timedelta(hours=9, minutes=30)
+                    y_930 = t_930 - pd.Timedelta(days=1)
+                    rain_24h = dh.loc[(dh['Time'] > y_930) & (dh['Time'] <= t_930), 'precipitation'].sum()
+                    day_indices = dh[dh['Time'].dt.date == d.date()]
+                    
+                    max_hi = day_indices['HI'].max() if not day_indices.empty else np.nan
+                    max_wbgt = day_indices['WBGT'].max() if not day_indices.empty else np.nan
+                    
+                    all_data.append({
+                        'Date': d.strftime('%Y-%m-%d'), 
+                        'Station': city,
+                        'Max_Temp': round(dd.loc[dd['Date'] == d, 'Tmax'].values[0] + bias, 1),
+                        'Max_HeatIndex': max_hi,
+                        'Max_WBGT': max_wbgt,
+                        'Rain_24h': round(rain_24h, 2)
+                    })
         p_bar.progress((i + 1) / len(city_list))
     if all_data:
         st.session_state['master_df'] = pd.DataFrame(all_data)
@@ -404,8 +408,7 @@ if 'master_df' in st.session_state:
         <h4 style='color: #007bff; margin-top: 0;'>📝 ဇယားတွင် ပါဝင်သည့် ဒေတာများရှင်းလင်းချက်</h4>
         <ul style='list-style-type: none; padding-left: 0; line-height: 1.8;'>
             <li><b>၁။ အမြင့်ဆုံးအပူချိန်:</b> နေ့တစ်နေ့၏ ဖြစ်ပေါ်နိုင်သော အမြင့်ဆုံးအပူချိန် (Max Temp)</li>
-            <li><b>၂။ အနိမ့်ဆုံးအပူချိန်:</b> နေ့တစ်နေ့၏ ဖြစ်ပေါ်နိုင်သော အနိမ့်ဆုံးအပူချိန် (Min Temp)</li>
-            <li><b>၃။ မိုးရေချိန် (၂၄ နာရီ):</b> ယခင်နေ့ နံနက် ၀၉:၃၀ နာရီမှ ယနေ့နံနက် ၀၉:၃၀ နာရီအထိ ၂၄ နာရီအတွင်း ရွာသွန်းသော စုစုပေါင်းမိုးရေချိန်</li>
+            <li><b>၂။ မိုးရေချိန် (၂၄ နာရီ):</b> ယခင်နေ့ နံနက် ၀၉:၃၀ နာရီမှ ယနေ့နံနက် ၀၉:၃၀ နာရီအထိ ၂၄ နာရီအတွင်း ရွာသွန်းသော စုစုပေါင်းမိုးရေချိန်</li>
         </ul>
         <p style='font-size: 0.85em; color: #666; font-style: italic; margin-top: 10px;'>
             *မှတ်ချက်။ ။ အထက်ပါဒေတာများသည် DMH ၏ စံသတ်မှတ်ချက်များနှင့်အညီ တွက်ချက်ဖော်ပြထားခြင်း ဖြစ်ပါသည်။
