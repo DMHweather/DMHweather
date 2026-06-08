@@ -29,7 +29,7 @@ def calculate_all_indices(temp_c, rh):
     utci = temp_c + (0.33 * e) - (0.7 * 0.1) - 4.0
     return round(hi, 1), round(wbgt, 1), round(utci, 1)
 
-# --- ၃။ ဘာသာစကားနှင့် စာသားများ (Air Quality ကဏ္ဍ လုံးဝဖြုတ်ထားသည်) ---
+# --- ၃။ ဘာသာစကားနှင့် စာသားများ (Air Quality ဖြုတ်ထားသည်) ---
 LANG_DATA = {
     "မြန်မာ": {
         "title": "DMH AI မိုးလေဝသခန်းမှန်းချက်စနစ်",
@@ -129,17 +129,12 @@ MARINE_STATIONS = {
     }
 }
 
-@st.cache_data(ttl=7200, max_entries=150)
-def fetch_weather_generic(city, source_dict):
-    if city not in source_dict: 
-        return None, None
-    loc = source_dict[city]
-    
-    tz_param = loc.get('tz', 'Asia/Yangon').replace('/', '%2F')
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={loc['lat']}&longitude={loc['lon']}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone={tz_param}"
-    
+@st.cache_data(ttl=3600, max_entries=100)
+def fetch_weather_generic(lat, lon, tz_name="Asia/Yangon"):
+    tz_param = tz_name.replace('/', '%2F')
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation,windspeed_10m,winddirection_10m,relative_humidity_2m,visibility,cloud_cover,cape&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&windspeed_unit=mph&forecast_days=16&timezone={tz_param}"
     try:
-        r = requests.get(url, timeout=30)
+        r = requests.get(url, timeout=20)
         r.raise_for_status()
         res = r.json()
         
@@ -163,15 +158,11 @@ def fetch_weather_generic(city, source_dict):
             "Tmin": res['daily']['temperature_2m_min']
         })
         return df_h, df_d
-
     except Exception as e:
-        if "429" in str(e):
-            st.error("⚠️ API Limit ပြည့်သွားပါပြီ။ ၁ မိနစ်ခန့် စောင့်ပေးပါ။")
-        else:
-            st.error(f"Error fetching data: {e}")
+        st.error(f"Weather API Error: {e}")
         return None, None
 
-# --- ၅။ Sidebar UI (Form စနစ်ကို အရင်နေ့ကလို မူလအတိုင်း ဖျက်သိမ်းထားသည်) ---
+# --- ၅။ Sidebar UI (အရင်နေ့ကလို မူလလက်ဟောင်း ပုံစံအတိုင်း ပြန်ပြင်ထားသည်) ---
 st.sidebar.image(dm_header_logo, width=100)
 lang = st.sidebar.radio("🌐 Language", ["မြန်မာ", "English"], horizontal=True)
 T = LANG_DATA[lang]
@@ -180,55 +171,58 @@ bias = st.sidebar.slider("🌡️ Bias Correction (°C)", -5.0, 5.0, 0.0)
 view_mode_choice = st.sidebar.radio(T["view_mode_label"], T["modes"])
 mode_index = T["modes"].index(view_mode_choice)
 
-# အရင်ပုံစံအတိုင်း ရွေးလိုက်တာနဲ့ တန်းအလုပ်လုပ်မည့် တည်နေရာရွေးချယ်မှုအပိုင်း
+# မြို့နှင့် တည်နေရာရွေးချယ်မှုကို ခလုတ်မလိုဘဲ တန်းအလုပ်လုပ်စေခြင်း
 selected_city = "Naypyidaw"
-active_dict = MYANMAR_CITIES
+lat, lon = 19.76, 96.08
+tz_active = "Asia/Yangon"
 
-if mode_index == 4:  # Marine Mode
+if mode_index == 4:  # ပင်လယ်ပြင် ကဏ္ဍ
     selected_region = st.sidebar.selectbox(T["marine_region_label"], list(MARINE_STATIONS.keys()))
     selected_city = st.sidebar.selectbox(T["marine_station_label"], list(MARINE_STATIONS[selected_region].keys()))
-    active_dict = MARINE_STATIONS[selected_region]
-
-elif mode_index == 5:  # Custom Search
+    lat = MARINE_STATIONS[selected_region][selected_city]["lat"]
+    lon = MARINE_STATIONS[selected_region][selected_city]["lon"]
+elif mode_index == 5:  # စိတ်ကြိုက်ရှာဖွေရန်
     search_type = st.sidebar.radio("🔍 ရှာဖွေမည့်ပုံစံ", ["မြို့အမည်ဖြင့် ရိုက်ရှာရန်", "Lat / Lon ကိုယ်တိုင်ရိုက်ထည့်ရန်"])
     if search_type == "မြို့အမည်ဖြင့် ရိုက်ရှာရန်":
         search_query = st.sidebar.text_input("🏙️ မြို့အမည် (အင်္ဂလိပ်လို)", "Singapore")
         selected_city = search_query
-        active_dict = {search_query: {"lat": 1.3521, "lon": 103.8198, "tz": "Asia/Singapore"}}
+        # Default fallback
+        lat, lon, tz_active = 1.3521, 103.8198, "Asia/Singapore"
+        if search_query.strip():
+            try:
+                geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={search_query}&count=1&language=en&format=json"
+                geo_res = requests.get(geo_url).json()
+                if "results" in geo_res and len(geo_res["results"]) > 0:
+                    res_idx = geo_res["results"][0]
+                    selected_city = f"{res_idx['name']} ({res_idx.get('country', '')})"
+                    lat, lon = res_idx["latitude"], res_idx["longitude"]
+                    tz_active = res_idx.get("timezone", "Asia/Yangon")
+            except:
+                pass
     else:
-        c_lat = st.sidebar.number_input("📍 Latitude", value=13.7563, format="%.4f")
-        c_lon = st.sidebar.number_input("📍 Longitude", value=100.5018, format="%.4f")
-        selected_city = f"Custom ({c_lat}, {c_lon})"
-        active_dict = {selected_city: {"lat": c_lat, "lon": c_lon, "tz": "Asia/Yangon"}}
+        lat = st.sidebar.number_input("📍 Latitude", value=13.7563, format="%.4f")
+        lon = st.sidebar.number_input("📍 Longitude", value=100.5018, format="%.4f")
+        selected_city = f"Custom ({lat}, {lon})"
 else:
     selected_city = st.sidebar.selectbox(T["station_label"], city_list)
-    active_dict = MYANMAR_CITIES
+    if selected_city in MYANMAR_CITIES:
+        lat = MYANMAR_CITIES[selected_city]["lat"]
+        lon = MYANMAR_CITIES[selected_city]["lon"]
 
-# --- အလိုအလျောက် ဒေတာဆွဲယူခြင်းစနစ် ---
-if mode_index == 5 and 'search_type' in locals() and search_type == "မြို့အမည်ဖြင့် ရိုက်ရှာရန်":
-    geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={selected_city}&count=1&language=en&format=json"
-    try:
-        geo_res = requests.get(geo_url).json()
-        if "results" in geo_res and len(geo_res["results"]) > 0:
-            res_idx = geo_res["results"][0]
-            selected_city = f"{res_idx['name']} ({res_idx.get('country', '')})"
-            active_dict = {selected_city: {"lat": res_idx["latitude"], "lon": res_idx["longitude"], "tz": res_idx.get("timezone", "Asia/Yangon")}}
-    except:
-        pass
-
-if mode_index not in [4, 6]:
-    df_h, df_d = fetch_weather_generic(selected_city, active_dict)
-else:
-    df_h, df_d = None, None
-
+# --- ၆။ ပြသခြင်း ခေါင်းစဉ်ပိုင်း ---
+st.title(T["title"])
 st.info(f"📍 လက်ရှိပြသနေသောစခန်း - {selected_city} | 🕒 {formatted_now}")
 
-if df_h is not None:
-    df_h['Temp'] += bias
-    df_d['Tmax'] += bias
-    df_d['Tmin'] += bias
+# ကုန်းတွင်းပိုင်း ခန့်မှန်းချက်များအတွက် ဒေတာဆွဲယူခြင်း
+df_h, df_d = None, None
+if mode_index not in [4, 6]:
+    df_h, df_d = fetch_weather_generic(lat, lon, tz_active)
+    if df_h is not None:
+        df_h['Temp'] += bias
+        df_d['Tmax'] += bias
+        df_d['Tmin'] += bias
 
-# --- ၆။ Graph Render Helper ---
+# --- ၇။ Graph Render Helper ---
 def render_icon_style_forecast(df_hourly):
     display_days = st.slider("📅 ပြသလိုသည့် ရက်ပမာဏ", min_value=1, max_value=16, value=7, key="days_slider_unique")
     total_points = display_days * 8
@@ -254,7 +248,7 @@ def render_icon_style_forecast(df_hourly):
     fig_accu.update_layout(hovermode="x unified", height=460, margin=dict(t=30, b=30, l=30, r=30))
     st.plotly_chart(fig_accu, use_container_width=True)
 
-# --- ၇။ Main App Modes Display Logic ---
+# --- ၈။ Main App Modes Display Logic ---
 if mode_index == 0:
     st.warning(T["dmh_alert"])
     if df_d is not None and df_h is not None:
@@ -262,20 +256,18 @@ if mode_index == 0:
         st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
         
         df_6h = df_h.set_index('Time').resample('6h').agg({
-            'precipitation': 'sum', 
-            'Wind': 'mean', 
-            'WindDir': 'mean', 
-            'Cloud_Oktas': 'max', 
-            'Thunderstorm': 'max'
+            'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 'Cloud_Oktas': 'max', 'Thunderstorm': 'max'
         }).reset_index()
         
         st.subheader(T["charts"][1])
         st.plotly_chart(px.bar(df_6h, x='Time', y='precipitation'), use_container_width=True)
         st.subheader(T["charts"][2])
         fig_wind = go.Figure()
-        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers'))
-        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red')))
+        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='lines+markers', name="Wind Speed"))
+        fig_wind.add_trace(go.Scatter(x=df_6h['Time'], y=df_6h['Wind'], mode='markers', marker=dict(symbol='triangle-up', angle=df_6h['WindDir'], size=12, color='red'), name="Direction"))
         st.plotly_chart(fig_wind, use_container_width=True)
+    else:
+        st.error("⚠️ မိုးလေဝသဒေတာ ရယူနိုင်ခြင်း မရှိသေးပါ။")
 
 elif mode_index == 1:
     if df_h is not None:
@@ -284,6 +276,8 @@ elif mode_index == 1:
         t_now = df_h.iloc[0]
         val = t_now['HI'] if idx_choice == "Heat Index" else t_now['Temp']
         st.metric(label=idx_choice, value=f"{val:.1f} °C")
+    else:
+        st.error("⚠️ ဒေတာမရှိပါ။")
 
 elif mode_index == 2:
     st.subheader("🌡️ Future Climate Projection (SSP5-8.5)")
@@ -295,22 +289,24 @@ elif mode_index == 3:
     if df_h is not None:
         render_icon_style_forecast(df_h)
 
-elif mode_index == 4:  # Marine Mode (မူလပုံစံအတိုင်း လှိုင်းအခြေအနေဆွဲထုတ်ချက်)
-    lat = active_dict[selected_city]["lat"]
-    lon = active_dict[selected_city]["lon"]
+elif mode_index == 4:  # ပင်လယ်ပြင် လှိုင်းအခြေအနေ (Marine API စနစ်မှန်အတိုင်း)
     marine_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&hourly=wave_height,wave_direction&timezone=Asia/Yangon"
     try:
-        res_m = requests.get(marine_url).json()
-        df_m = pd.DataFrame({"Time": pd.to_datetime(res_m["hourly"]["time"]), "Wave Height (m)": res_m["hourly"]["wave_height"]})
-        st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", title=f"{selected_city} - Wave Height Trend"), use_container_width=True)
-    except:
-        st.error("ပင်လယ်ပြင် API ချိတ်ဆက်မှု အဆင်မပြေပါ။")
+        res_m = requests.get(marine_url, timeout=15).json()
+        df_m = pd.DataFrame({
+            "Time": pd.to_datetime(res_m["hourly"]["time"]), 
+            "Wave Height (m)": res_m["hourly"]["wave_height"]
+        })
+        st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်ခန့်မှန်းချက် တင်ပြချက်")
+        st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", labels={"Wave Height (m)": "Wave Height (meters)"}, markers=True), use_container_width=True)
+    except Exception as e:
+        st.error(f"⚓ ပင်လယ်ပြင် API ချိတ်ဆက်မှု အဆင်မပြေပါ သို့မဟုတ် ရွေးချယ်ထားသောမြို့သည် ကမ်းရိုးတန်းမဟုတ်ပါ။ ({e})")
 
 elif mode_index == 5:
     if df_h is not None:
         render_icon_style_forecast(df_h)
 
-elif mode_index == 6:  # Verification Engine
+elif mode_index == 6:
     st.subheader("📊 Model Accuracy Audit")
     if DMHForecastVerification is not None:
         st.success("Verification Engine Active.")
