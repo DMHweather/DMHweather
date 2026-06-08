@@ -76,12 +76,28 @@ LANG_DATA = {
             "နိုင်ငံတကာနှင့် စိတ်ကြိုက်နေရာ ရှာဖွေရန်",
             "Model Accuracy Audit 📊"
         ], 
-        "dmh_alert": "📢 အကြံပြုချက်။ နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
-        "charts": [
-            "🌡️ ၁။ အပူချိန်(ဒီဂရီဆဲလ်စီးယပ်)", "🌧️ ၂။ မိုးရေချိန်(မီလီမီတာ) ၆ နာရီအတွင်းရွာသွန်းသောပမာဏ",
-            "💨 ၃။ လေတိုက်နှုန်း(mph)နှင့်လေတိုက်ရာအရပ်"
-        ],
+         "dmh_alert": "📢 အကြံပြုချက်: နောက်ဆုံးရ မိုးလေဝသသတင်းများအတွက် မိုးဇလ သတင်းများကိုစောင့်ကြည့်ပါ။",
+        "storm_note": "📝 မှတ်ချက်: မိုးတိမ်တောင် ဖြစ်နိုင်ခြေ ၆၀% ထက်ကျော်လွန်ပါက လေပြင်းတိုက်ခတ်ခြင်း၊ မိုးကြိုးပစ်ခြင်းနှင့် လျှပ်စီးလက်ခြင်းများ ဖြစ်ပေါ်နိုင်သဖြင့် ဂရုပြုရန် လိုအပ်ပါသည်။",
         "ibf_header": "🏥 ကျန်းမာရေးကဏ္ဍဆိုင်ရာ အကျိုးသက်ရောက်မှုနှင့် အကြံပြုချက်များ",
+        "risk_levels": ["Extreme Risk (အလွန်အန္တရာယ်ရှိ)", "High Risk (အန္တရာယ်ရှိ)", "Moderate Risk (သတိပြုရန်)", "Low Risk (ပုံမှန်)"],
+        "charts": [
+            "🌡️  ၁။ အပူချိန်(ဒီဂရီဆဲလ်စီးယပ်)", "🌧️ ၂။ မိုးရေချိန်(မီလီမီတာ) ၆ နာရီအတွင်းရွာသွန်းသောပမာဏ",
+            "💨 ၃။ လေတိုက်နှုန်း(mph)နှင့်လေတိုက်ရာအရပ်", "🔭 ၄။ အဝေးမြင်တာ (km)",
+            "💧  ၅။ စိုထိုင်းဆ (%)", "☁️ ၆။ တိမ်ဖုံးမှုပမာဏ (Oktas: 0-8)",
+            "⚡ ၇။ မိုးတိမ်တောင်နှင့် လျှပ်စီးလက်နိုင်ခြေ (%)"
+        ],
+        "impact_list": [
+            "အလွန်စိုးရိမ်ရသော အခြေအနေ! အပူဒဏ်လျှပ်စီးဖြတ်ခြင်း (Heatstroke) နှင့် ရေဓာတ်ကုန်ခမ်းခြင်းကြောင့် အသက်အန္တရာယ်ရှိနိုင်သည်။", 
+            "အန္တရာယ်ရှိသော အခြေအနေ! အပူဒဏ်ကြောင့် ပင်ပန်းနွမ်းနယ်ခြင်း ဖြစ်နိုင်ပါသည်။ ကလေးနှင့် လူအိုများ အထူးသတိပြုပါ။", 
+            "သတိပြုရန် အခြေအနေ! နေရောင်အောက်တွင် ကြာရှည်နေပါက ပင်ပန်းနွမ်းနယ်ခြင်း ဖြစ်ပေါ်နိုင်ပါသည်။", 
+            "ပုံမှန်အခြေအနေ! သိသာထင်ရှားသော ကျန်းမာရေးထိခိုက်မှု မရှိနိုင်ပါ။"
+        ],
+        "recom_list": [
+            "အိမ်ထဲတွင်သာ နေပါ။ ရေ (၃-၄) လီတာ သောက်ပါ။ မူးဝေပါက ဆေးရုံသို့ အမြန်သွားပါ။ မိုးလေဝသ သတင်းများကို အချိန်ပြည့် စောင့်ကြည့်လိုက်နာပါ။", 
+            "ပြင်ပလုပ်ငန်းများကို နံနက်/ညနေသာ လုပ်ပါ။ ထီး/ဦးထုပ် ဆောင်းပါ။ ရေဓာတ်ဖြည့်ပါ။ မိုးဇလခန့်မှန်းချက်များနှင့် သတင်းများကို ဆက်လက်နားထောင်ပါ။",  
+            "ပေါ့ပါးသော အဝတ်များ ဝတ်ပါ။ ရေခဏခဏသောက်ပါ။ အရိပ်တွင် နားပါ။ မိုးဇလခန်းမှန်းချက်များနှင့် သတင်းများကို နားထောင်ပါ။", 
+            "ပုံမှန်အတိုင်း နေနိုင်ပါသည်။ ရေဓာတ်ဖြည့်တင်းရန်နှင့် မိုးဇလခန့်မှန်းချက်များနှင့် သတင်းများကို နားထောင်ပါ။", 
+        ],
         "marine_region_label": "🌊 ကမ်းရိုးတန်းဒေသ ရွေးချယ်ရန်",
         "marine_station_label": "⚓ ကမ်းရိုးတန်းမြို့နယ်/စခန်း ရွေးချယ်ရန်"
     },
@@ -90,12 +106,22 @@ LANG_DATA = {
         "station_label": "🎯 Select Station",
         "view_mode_label": "📊 View Mode",
         "modes": [
-            "16-Days Forecast", "Heatwave Monitoring (IBF)", "Climate Change Projection SSP5-8.5",
-            "Icon Style Forecast", "Marine Wave Forecast", "Global & Custom Coordinates Search", "Model Accuracy Audit 📊"
+            "16-Days Forecast", 
+            "Heatwave Monitoring (IBF)", 
+            "Climate Change Projection SSP5-8.5",
+            "Icon Style Forecast",
+            "Marine Wave Forecast",
+            "Global & Custom Coordinates Search",
+            "Air Quality Forecast",
+            "Model Accuracy Audit 📊"
         ],
-        "dmh_alert": "📢 Tip: Follow DMH news for the latest weather updates.",
-        "charts": ["🌡️ 1. Temperature(°C)", "🌧️ 2. Precipitation(mm) 6 hourly", "💨 3. Wind Speed (mph) & Direction"],
+        "dmh_alert":  "📢 Tip: Follow DMH news for the latest weather updates.",
+        "storm_note": "📝 Note: If thunderstorm probability exceeds 60%, beware of strong winds and lightning.",
         "ibf_header": "🏥 Health Impacts & Recommendations",
+        "risk_levels": ["Extreme Risk", "High Risk", "Moderate Risk", "Low Risk"],
+        "charts": ["🌡️ 1. Temperature(°C)", "🌧️ 2. Precipitation(mm) 6 hourly", "💨 3. Wind Speed (mph) & Direction", "🔭 4. Visibility (km)", "💧 5. Humidity (%)", "☁️ 6. Cloud Cover (Oktas: 0-8)", "⚡ 7. Thunderstorm & Lightning Probability (%)"],
+        "impact_list": ["Extreme danger! Heatstroke possible.", "High danger! Fatigue possible.", "Caution! Sun exposure may cause fatigue.", "Normal conditions."],
+        "recom_list": ["Stay indoors. Drink 3-4L water, Follow DMH news for the latest weather updates.", "Work morning/evening only. Use umbrella, Follow DMH news for the latest weather updates.", "Wear light clothes. Rest in shade, Follow DMH news for the latest weather updates.", "Stay hydrated and follow updates, Follow DMH news for the latest weather updates."],
         "marine_region_label": "🌊 Select Coastal Region",
         "marine_station_label": "⚓ Select Coastal Station"
     }
@@ -115,16 +141,24 @@ city_list = sorted(list(MYANMAR_CITIES.keys()))
 
 MARINE_STATIONS = {
     "ရခိုင်ကမ်းရိုးတန်းဒေသ (Rakhine Coast)": {
-        "မောင်တော (Maungdaw)": {"lat": 20.82, "lon": 92.36}, "စစ်တွေ (Sittwe)": {"lat": 20.14, "lon": 92.89},
-        "ကျောက်ဖြူ (Kyaukpyu)": {"lat": 19.42, "lon": 93.55}, "သံတွဲ (Thandwe)": {"lat": 18.47, "lon": 94.36}, "ဂွ (Gwa)": {"lat": 17.59, "lon": 94.58}
+        "မောင်တော (Maungdaw)": {"lat": 20.82, "lon": 92.36},
+        "စစ်တွေ (Sittwe)": {"lat": 20.14, "lon": 92.89},
+        "ကျောက်ဖြူ (Kyaukpyu)": {"lat": 19.42, "lon": 93.55},
+        "သံတွဲ (Thandwe)": {"lat": 18.47, "lon": 94.36},
+        "ဂွ (Gwa)": {"lat": 17.59, "lon": 94.58}
     },
     "ဧရာဝတီမြစ်ဝကျွန်းပေါ်ဒေသ (Ayeyarwady Delta)": {
-        "ဟိုင်းကြီးကျွန်း (Hainggyikyun)": {"lat": 16.03, "lon": 94.35}, "လပွတ္တာ/ပြင်စလူ (Pyinsalu)": {"lat": 15.78, "lon": 94.88}, "ဖျာပုံ (Pyapon)": {"lat": 16.13, "lon": 95.68}
+        "ဟိုင်းကြီးကျွန်း (Hainggyikyun)": {"lat": 16.03, "lon": 94.35},
+        "လပွတ္တာ/ပြင်စလူ (Pyinsalu)": {"lat": 15.78, "lon": 94.88},
+        "ဖျာပုံ (Pyapon)": {"lat": 16.13, "lon": 95.68}
     },
     "မွန်-တနင်္သာရီကမ်းရိုးတန်းဒေသ (Mon-Tanintharyi Coast)": {
-        "ဘီလူးကျွန်း/ချောင်းဆုံ (Chaungzon)": {"lat": 16.36, "lon": 97.51}, "ရေး (Ye)": {"lat": 15.25, "lon": 97.85},
-        "ထားဝယ် (Dawei)": {"lat": 14.08, "lon": 98.19}, "မြိတ် (Myeik)": {"lat": 12.44, "lon": 98.60},
-        "ဘုတ်ပြင်း (Bokpyin)": {"lat": 11.16, "lon": 98.88}, "ကော့သောင်း (Kawthaung)": {"lat": 9.99, "lon": 98.55}
+        "ဘီလူးကျွန်း/ချောင်းဆုံ (Chaungzon)": {"lat": 16.36, "lon": 97.51},
+        "ရေး (Ye)": {"lat": 15.25, "lon": 97.85},
+        "ထားဝယ် (Dawei)": {"lat": 14.08, "lon": 98.19},
+        "မြိတ် (Myeik)": {"lat": 12.44, "lon": 98.60},
+        "ဘုတ်ပြင်း (Bokpyin)": {"lat": 11.16, "lon": 98.88},
+        "ကော့သောင်း (Kawthaung)": {"lat": 9.99, "lon": 98.55}
     }
 }
 
@@ -139,10 +173,14 @@ def fetch_weather_generic(lat, lon, tz_name="Asia/Yangon"):
         r.raise_for_status()
         res = r.json()
         
-        df_h = pd.DataFrame({
-            "Time": pd.to_datetime(res['hourly']['time']), "Temp": res['hourly']['temperature_2m'],
-            "precipitation": res['hourly']['precipitation'], "Wind": res['hourly']['windspeed_10m'], "WindDir": res['hourly']['winddirection_10m'],
-            "Vis": [v/1000 if v is not None else 0 for v in res['hourly']['visibility']], "Humid": res['hourly']['relative_humidity_2m'],
+       df_h = pd.DataFrame({
+            "Time": pd.to_datetime(res['hourly']['time']), 
+            "Temp": res['hourly']['temperature_2m'],
+            "precipitation": res['hourly']['precipitation'],
+            "Wind": res['hourly']['windspeed_10m'],
+            "WindDir": res['hourly']['winddirection_10m'],
+            "Vis": [v/1000 if v is not None else 0 for v in res['hourly']['visibility']],
+            "Humid": res['hourly']['relative_humidity_2m'],
             "Cloud_Oktas": [round((c/100)*8) if c is not None else 0 for c in res['hourly']['cloud_cover']],
             "Thunderstorm": [min(round((c/3500)*100), 100) if (c is not None and not pd.isna(c)) else 0 for c in res['hourly'].get('cape', [])]
         })
@@ -242,6 +280,13 @@ def render_icon_style_forecast(df_hourly):
     fig_accu.add_trace(go.Scatter(x=df_3h['Time'].dt.strftime('%b %d\n%I:%M %p'), y=df_3h['Temp'], name="Temperature (°C)", mode='lines+markers+text', text=icons_list, textposition="top center", line=dict(color='#FF6D00', shape='spline')), secondary_y=False)
     fig_accu.update_layout(hovermode="x unified", height=460, margin=dict(t=30, b=30, l=30, r=30))
     st.plotly_chart(fig_accu, use_container_width=True)
+
+    table_title = f"### 📊 3-Hourly Comprehensive Data Table ({display_days}-Days)"
+    st.markdown(table_title)
+    df_table = df_3h.copy()
+    df_table['Time'] = df_table['Time'].dt.strftime('%Y-%m-%d %I:%M %p')
+    df_table.columns = ["Time Slot", "Temperature (°C)", "Precipitation (mm)", "Wind Speed (mph)", "Visibility (km)", "Humidity (%)", "Cloud Cover (Oktas)", "Thunderstorm Prob (%)"]
+    st.dataframe(df_table.set_index("Time Slot"), use_container_width=True)
 
 # --- ၁၀။ Display Router ---
 if mode_index == 0:
