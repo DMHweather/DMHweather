@@ -306,8 +306,18 @@ if df_h is not None:
 # Mode 0: 16-Days Forecast
 if mode_index == 0:
     st.warning(T["dmh_alert"])
-    st.subheader(T["charts"][0])
-    st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
+    
+    # df_d ထဲမှာ တကယ့် ဒေတာတွေ ပါရဲ့လား အရင်စစ်မယ်
+    if df_d is not None and not df_d.empty and 'Tmax' in df_d.columns:
+        st.subheader(T["charts"][0])
+        st.plotly_chart(px.line(df_d, x='Date', y=['Tmax', 'Tmin'], markers=True), use_container_width=True)
+        
+        # ကျန်တဲ့ ဒုတိယ၊ တတိယ Graph တွေကိုလည်း ဒီ if အောက်ထဲမှာပဲ စုထည့်ထားပါ
+        # ဥပမာ- df_6h ဆွဲတဲ့ code တွေ၊ Wind Graph တွေ အကုန်လုံး...
+        
+    else:
+        # ဒေတာ အဆင်မပြေရင် အနီရောင် ကွက်ကြီး မပြဘဲ ဒီစာလေးပဲ ပြပေးပါလိမ့်မယ်
+        st.error("⚠️ API Limit ပြည့်သွားခြင်း သို့မဟုတ် ဒေတာမပြည့်စုံခြင်းကြောင့် Graph မဆွဲနိုင်သေးပါ။ ခေတ္တစောင့်ပြီး Refresh လုပ်ပေးပါ။")
 
     df_6h = df_h.set_index('Time').resample('6h').agg({
         'precipitation': 'sum', 'Wind': 'mean', 'WindDir': 'mean', 
