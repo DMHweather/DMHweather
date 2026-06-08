@@ -255,13 +255,13 @@ is_simulated = False
 if mode_index not in [4, 6]:
     data_pack, status = fetch_weather_generic(lat, lon, tz_active)
     if status == "429":
-        st.warning("⚠️ Weather API Error: 429 Client Error: Too Many Requests! AI Simulated Dashboard ဖြင့် အစားထိုးပြသနေပါသည်။")
+        st.warning("⚠️ AI Simulated Dashboard ဖြင့် အစားထိုးပြသနေပါသည်။")
         df_h, df_d = generate_fallback_data(lat, lon)
         is_simulated = True
     elif status == "OK" and data_pack is not None:
         df_h, df_d = data_pack
     else:
-        st.warning("⚠️ ဒေတာရယူရန် ခေတ္တအခက်အခဲရှိနေသဖြင့် AI Simulated Dashboard ဖြင့် ပြသထားပါသည်။")
+        st.warning("⚠️ AI Simulated Dashboard ဖြင့် ပြသထားပါသည်။")
         df_h, df_d = generate_fallback_data(lat, lon)
         is_simulated = True
 
@@ -400,10 +400,10 @@ elif mode_index == 4:
     try:
         res_m = requests.get(marine_url, timeout=12).json()
         df_m = pd.DataFrame({"Time": pd.to_datetime(res_m["hourly"]["time"]), "Wave Height (m)": res_m["hourly"]["wave_height"]})
-        st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်ခန့်မှန်းချက် ပြသကွက်")
+        st.subheader(f"🌊 {selected_city} - ပင်လယ်ပြင်လှိုင်းအမြင့်ခန့်မှန်းချက်")
         st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", markers=True, line_shape="spline"), use_container_width=True)
     except:
-        st.warning("⚓ ပင်လယ်ပြင် API Limit ပြည့်နေသဖြင့် လှိုင်းခန့်မှန်းချက်အား AI Simulation စနစ်ဖြင့် အစားထိုး တင်ပြပေးထားပါသည်ဗျာ။")
+        st.warning("⚓ ပင်လယ်ပြင် API Limit ပြည့်နေသဖြင့် လှိုင်းခန့်မှန်းချက်အား AI Simulation စနစ်ဖြင့် အစားထိုးခြင်း။")
         sim_times = [datetime.now(mm_tz).replace(hour=0,minute=0)+timedelta(hours=i) for i in range(7*24)]
         df_m_sim = pd.DataFrame({"Time": sim_times, "Wave Height (m)": [max(0.5, 1.2 + 0.5*np.sin(2*np.pi*i/24)+np.random.normal(0,0.1)) for i in range(7*24)]})
         st.plotly_chart(px.line(df_m_sim, x="Time", y="Wave Height (m)", markers=True), use_container_width=True)
