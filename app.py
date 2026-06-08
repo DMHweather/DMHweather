@@ -94,7 +94,7 @@ LANG_DATA = {
     }
 }
 
-# --- ၄။ ဒေတာဖတ်ခြင်းနှင့် API Cache အား ကောင်းမွန်အောင် ပြင်ဆင်ခြင်း ---
+# --- ၄။ ဒေတာဖတ်ခြင်းနှင့် API Cache စနစ် ---
 @st.cache_data
 def load_stations():
     try:
@@ -106,6 +106,7 @@ def load_stations():
 MYANMAR_CITIES = load_stations()
 city_list = sorted(list(MYANMAR_CITIES.keys()))
 
+# 💡 ဤနေရာတွင် ထားဝယ် (Dawei) ၏ 'lon' သတ်မှတ်ချက်ကို အမှန်ပြင်ဆင်ထားပါသည်
 MARINE_STATIONS = {
     "ရခိုင်ကမ်းရိုးတန်းဒေသ (Rakhine Coast)": {
         "မောင်တော (Maungdaw)": {"lat": 20.82, "lon": 92.36},
@@ -122,7 +123,7 @@ MARINE_STATIONS = {
     "မွန်-တနင်္သာရီကမ်းရိုးတန်းဒေသ (Mon-Tanintharyi Coast)": {
         "ဘီလူးကျွန်း/ချောင်းဆုံ (Chaungzon)": {"lat": 16.36, "lon": 97.51},
         "ရေး (Ye)": {"lat": 15.25, "lon": 97.85},
-        "ထားဝယ် (Dawei)": {"lat": 14.08, "8.19"},
+        "ထားဝယ် (Dawei)": {"lat": 14.08, "lon": 98.19},
         "မြိတ် (Myeik)": {"lat": 12.44, "lon": 98.60},
         "ဘုတ်ပြင်း (Bokpyin)": {"lat": 11.16, "lon": 98.88},
         "ကော့သောင်း (Kawthaung)": {"lat": 9.99, "lon": 98.55}
@@ -311,15 +312,24 @@ elif mode_index == 3:
         st.warning("👈 ဘယ်ဘက်က 'ခန့်မှန်းချက်ဒေတာရယူမည်' ခလုတ်ကို နှိပ်ပေးပါ။")
 
 elif mode_index == 4:  # Marine Mode
-    lat = active_dict[selected_city]["lat"]
-    lon = active_dict[selected_city]["lon"]
+    # 💡 ဤနေရာရှိ active_dict မှန်ကန်စွာအလုပ်လုပ်ရန်အတွက် Form submission မရှိသေးပါက Default အနေဖြင့် တန်ဖိုးတစ်ခုသတ်မှတ်ပေးပါသည်
+    try:
+        lat = active_dict[selected_city]["lat"]
+        lon = active_dict[selected_city]["lon"]
+    except KeyError:
+        # Fallback to first available marine station if city not found initially
+        first_region = list(MARINE_STATIONS.keys())[0]
+        first_city = list(MARINE_STATIONS[first_region].keys())[0]
+        lat = MARINE_STATIONS[first_region][first_city]["lat"]
+        lon = MARINE_STATIONS[first_region][first_city]["lon"]
+
     marine_url = f"https://marine-api.open-meteo.com/v1/marine?latitude={lat}&longitude={lon}&hourly=wave_height,wave_direction&timezone=Asia/Yangon"
     try:
         res_m = requests.get(marine_url).json()
         df_m = pd.DataFrame({"Time": pd.to_datetime(res_m["hourly"]["time"]), "Wave Height (m)": res_m["hourly"]["wave_height"]})
         st.plotly_chart(px.line(df_m, x="Time", y="Wave Height (m)", title="Wave Height Trend"), use_container_width=True)
     except:
-        st.error("ပင်လယ်ပြင် API ချက်ဆက်မှု အဆင်မပြေပါ။")
+        st.error("ပင်လယ်ပြင် API ချိတ်ဆက်မှု အဆင်မပြေပါ။")
 
 elif mode_index == 5:
     if df_h is not None:
