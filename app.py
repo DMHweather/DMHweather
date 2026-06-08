@@ -513,26 +513,36 @@ if st.button("🚀 Export All Stations Report"):
                 dh, dd = data_pack
                 
             if dh is not None and dd is not None:
+                # ဒေတာဘောင်အတွင်း စံတော်ချိန်ကို ဇုန်မဲ့ (Naive) ပုံစံသို့ ပြောင်းလဲ၍ ဘေးကင်းစွာ နှိုင်းယှဉ်ခြင်း
+                dh_naive = dh.copy()
+                if dh_naive['Time'].dt.tz is not None:
+                    dh_naive['Time'] = dh_naive['Time'].dt.tz_localize(None)
+                
                 for d in dd['Date']:
-                    t_930 = d + pd.Timedelta(hours=9, minutes=30)
+                    # နေ့စွဲကို ဇုန်မဲ့အဖြစ် ပြောင်းလဲသတ်မှတ်ခြင်း
+                    d_naive = pd.to_datetime(d).tz_localize(None)
+                    t_930 = d_naive + pd.Timedelta(hours=9, minutes=30)
                     y_930 = t_930 - pd.Timedelta(days=1)
-                    rain_24h = dh.loc[(dh['Time'] > y_930) & (dh['Time'] <= t_930), 'precipitation'].sum()
-                    day_indices = dh[dh['Time'].dt.date == d.date()]
+                    
+                    # နှိုင်းယှဉ်မှု အမှားကင်းစေရန် စစ်ထုတ်ခြင်း
+                    rain_24h = dh_naive.loc[(dh_naive['Time'] > y_930) & (dh_naive['Time'] <= t_930), 'precipitation'].sum()
+                    day_indices = dh_naive[dh_naive['Time'].dt.date == d_naive.date()]
                     
                     max_hi = day_indices['HI'].max() if not day_indices.empty else np.nan
                     max_wbgt = day_indices['WBGT'].max() if not day_indices.empty else np.nan
                     
                     all_data.append({
-                        'Date': d.strftime('%Y-%m-%d'), 
+                        'Date': d_naive.strftime('%Y-%m-%d'), 
                         'Station': city,
                         'Max_Temp': round(dd.loc[dd['Date'] == d, 'Tmax'].values[0] + bias, 1),
-                        'Max_HeatIndex': max_hi,
-                        'Max_WBGT': max_wbgt,
+                        'Max_HeatIndex': max_hi if not pd.isna(max_hi) else 0.0,
+                        'Max_WBGT': max_wbgt if not pd.isna(max_wbgt) else 0.0,
                         'Rain_24h': round(rain_24h, 2)
                     })
         p_bar.progress((i + 1) / len(city_list))
     if all_data:
         st.session_state['master_df'] = pd.DataFrame(all_data)
+
 
 if 'master_df' in st.session_state:
     m_df = st.session_state['master_df']
